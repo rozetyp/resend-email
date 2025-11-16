@@ -64,6 +64,8 @@ const server = http.createServer((req, res) => {
       else if (filePath.endsWith('.css')) contentType = 'text/css';
       else if (filePath.endsWith('.js')) contentType = 'application/javascript';
       else if (filePath.endsWith('.json')) contentType = 'application/json';
+      else if (filePath.endsWith('.xml')) contentType = 'application/xml';
+      else if (filePath.endsWith('.txt')) contentType = 'text/plain';
       
       console.log('[SERVE] Serving file:', filePath, 'as', contentType);
       res.writeHead(200, { 'Content-Type': contentType });
