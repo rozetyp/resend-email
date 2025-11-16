@@ -437,6 +437,13 @@
                 </div>
               `;
               
+              // 7a. Reset form for next email
+              form.reset();
+              document.getElementById('body').value = '';
+              if (window.pell && window.pell.content) {
+                window.pell.content.innerHTML = '';
+              }
+              
             } catch (error) {
               // 8. Show failure message with actionable guidance
               let errorMsg = error.message;
