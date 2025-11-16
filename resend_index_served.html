@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Resend BYOK Mailer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f5f5f7;
+      margin: 0;
+      padding: 2rem;
+    }
+    .card {
+      max-width: 720px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+    label { display:block; font-size:0.9rem; margin-bottom:0.25rem; font-weight:600; }
+    input, textarea { width:100%; box-sizing:border-box; padding:0.5rem 0.75rem; border-radius:8px; border:1px solid #d0d0d5; margin-bottom:0.75rem; font:inherit; }
+    textarea { min-height:180px; resize:vertical; }
+    button { padding:0.6rem 1.4rem; border-radius:999px; border:none; font-weight:600; cursor:pointer; }
+    .title { font-size:1.4rem; font-weight:700; margin-bottom:1rem; }
+    .subtitle { font-size:0.9rem; color:#555; margin-bottom:1.25rem; }
+    .alert { padding:0.75rem 1rem; border-radius:8px; margin-bottom:1rem; font-size:0.9rem; }
+    .alert-error { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
+    .alert-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
+    .meta { font-size:0.8rem; color:#777; margin-bottom:0.75rem; }
+    .btn-secondary { background: transparent; border:1px solid #d0d0d5; color:#111; padding:0.45rem 0.9rem; border-radius:8px; }
+    /* Pell editor tweaks: make content visible and neutralize toolbar buttons */
+    .pell { border-radius:8px; }
+    .pell .pell-content { min-height:160px; color:#111; background:transparent; padding:8px; }
+    .pell .pell-action, .pell .pell-button { background: transparent !important; color:#111 !important; border: none !important; padding:6px !important; margin:0 2px !important; }
+    /* Primary send button styling (scoped) */
+    form > button[type="submit"] { padding:0.6rem 1.2rem; border-radius:8px; border:none; font-weight:700; cursor:pointer; background:#2563eb; color:white; }
+    /* Editor layout */
+    .editor-row { display:flex; gap:1rem; align-items:flex-start; }
+    @media (max-width:880px){ .editor-row{ flex-direction:column; } }
+    .editor-col { flex:1; min-width:0; }
+    .editor-toolbar { display:flex; gap:.5rem; flex-wrap:wrap; margin-bottom:.5rem; }
+    .editor-toolbar button { background:#f3f4f6; border:1px solid #e5e7eb; padding:.45rem .6rem; border-radius:6px; cursor:pointer; }
+    .editor-frame { border:1px solid #d0d0d5; border-radius:8px; min-height:200px; padding:.5rem; background:transparent; overflow:auto; }
+    .preview-col { width:320px; flex:0 0 320px; }
+    .preview-col .preview-inner { border:1px solid #e5e7eb; padding:1rem; border-radius:8px; background:#fff; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="title">Resend BYOK Mailer</div>
+    <div class="subtitle">Send emails from your Resend account using your own domain, via a simple UI.</div>
+
+    
+
+    
+
+    <form method="post" action="/send">
+      <label for="from_email">From</label>
+      
+      <div style="margin-bottom:.5rem;color:#92400e;background:#fff7ed;padding:.6rem;border-radius:8px;border:1px solid #ffd8a8;">
+        <strong>No verified domains found.</strong>
+        
+        <div style="font-size:.9rem;margin-top:.25rem;color:#92400e;">Reason: This API key is restricted to only send emails</div>
+        
+      </div>
+      
+
+      <input id="from_email" name="from_email" type="text" value="Antonkha &lt;no-reply@govconapi.com&gt;" placeholder="Your Name &lt;no-reply@yourdomain.com&gt;" required />
+
+      <label for="to_email">To</label>
+      <input id="to_email" name="to_email" type="email" value="" placeholder="recipient@example.com" required />
+
+      <label for="subject">Subject</label>
+      <input id="subject" name="subject" type="text" value="" placeholder="Subject line" required />
+
+      <label for="body">Body — HTML allowed <small style="font-weight:400;color:#666;">(Preview sanitized with DOMPurify)</small></label>
+
+      <div class="editor-row">
+        <div class="editor-col">
+          <div class="editor-toolbar" role="toolbar" aria-label="Editor toolbar">
+            <button type="button" data-cmd="bold" title="Bold"><strong>B</strong></button>
+            <button type="button" data-cmd="italic" title="Italic"><em>I</em></button>
+            <button type="button" data-cmd="underline" title="Underline"><u>U</u></button>
+            <button type="button" data-cmd="insertUnorderedList" title="Unordered list">• List</button>
+            <button type="button" data-cmd="insertOrderedList" title="Ordered list">1. List</button>
+            <button type="button" id="add_link" title="Insert link">Link</button>
+            <button type="button" id="clear_editor" title="Clear editor">Clear</button>
+          </div>
+
+          <div id="editor" class="editor-frame" contenteditable="true" data-last-body="" aria-label="Email body editor"><p><em>Start typing your email...</em></p></div>
+          <input type="hidden" name="body" id="body_input" />
+          <div style="margin-top:.5rem;display:flex;gap:.5rem;align-items:center;">
+            <button type="button" id="preview_btn" class="btn-secondary">Preview</button>
+            <button type="button" id="clear_btn" class="btn-secondary">Clear</button>
+          </div>
+        </div>
+
+        <div class="preview-col">
+          <div class="preview-inner" id="preview" style="display:none;">
+            <div style="font-weight:700;margin-bottom:.5rem;">Preview</div>
+            <div id="preview_content"></div>
+          </div>
+        </div>
+      </div>
+
+      <button type="submit">Send email</button>
+    </form>
+    <!-- Load DOMPurify for a safe preview of HTML body -->
+    <script src="https://cdn.jsdelivr.net/npm/dompurify@2.4.0/dist/purify.min.js"></script>
+
+    <script>
+      (function(){
+        const sel = document.getElementById('domain_select');
+        const from = document.getElementById('from_email');
+        const lock = document.getElementById('lock_from');
+        const chips = document.querySelectorAll('.domain-chip');
+        const previewBtn = document.getElementById('preview_btn');
+        const preview = document.getElementById('preview');
+        const previewContent = document.getElementById('preview_content');
+        const editor = document.getElementById('editor');
+        const bodyInput = document.getElementById('body_input');
+        const toolbarBtns = document.querySelectorAll('[data-cmd]');
+        const addLinkBtn = document.getElementById('add_link');
+        const clearEditorBtn = document.getElementById('clear_editor');
+        const clearBtn = document.getElementById('clear_btn');
+        const form = document.querySelector('form');
+
+        function setFrom(val){ if (!from) return; from.value = val; }
+
+        function initDomain(){
+          try{
+            const defaultFrom = 'Antonkha &lt;no-reply@govconapi.com&gt;';
+            let defaultDomain = '';
+            if(defaultFrom){
+              const m = defaultFrom.match(/@([^>\s]+)\b/);
+              if(m) defaultDomain = m[1];
+            }
+            if(sel && sel.options.length>1){
+              let picked = -1;
+              for(let i=1;i<sel.options.length;i++){
+                const opt = sel.options[i];
+                if(defaultDomain && opt.value.includes('@'+defaultDomain)){
+                  picked = i; break;
+                }
+              }
+              if(picked===-1) picked = 1;
+              sel.selectedIndex = picked;
+              if(!from.value) from.value = sel.options[picked].value;
+            }
+          }catch(e){/* ignore */}
+        }
+
+        if(sel && from){
+          sel.addEventListener('change', function(){
+            if(!this.value) return;
+            if(lock && lock.checked){ setFrom(this.value); }
+          });
+        }
+
+        // clicking chips selects domain and populates From
+        chips.forEach(c => c.addEventListener('click', function(){
+          const d = this.dataset.domain;
+          if(!d) return;
+          const name = (('' + ('Antonkha &lt;no-reply@govconapi.com&gt;')).split('<')[0] || '').trim();
+          const val = name ? (name + ' <no-reply@' + d + '>') : ('no-reply@' + d);
+          if(sel){
+            for(let i=0;i<sel.options.length;i++){
+              if(sel.options[i].value.includes('@'+d)){ sel.selectedIndex = i; break; }
+            }
+          }
+          setFrom(val);
+        }));
+
+        // Toolbar buttons: keep selection (prevent blur) and execCommand on the focused editor
+        toolbarBtns.forEach(btn => {
+          // prevent the button from stealing focus on mousedown
+          btn.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+          btn.addEventListener('click', function(){
+            const cmd = this.dataset.cmd;
+            if(!cmd) return;
+            // try to restore focus to editor — selection remains if mousedown prevented
+            editor && editor.focus();
+            try{ document.execCommand(cmd, false, null); }catch(e){ console.warn('execCommand failed', e); }
+          });
+        });
+
+        // Add link button with URL prompt
+        if(addLinkBtn){
+          addLinkBtn.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+          addLinkBtn.addEventListener('click', function(){
+            if(!editor) return;
+            const url = window.prompt('Enter the URL (https:// or mailto:):');
+            if(!url) return;
+            editor.focus();
+            try{ document.execCommand('createLink', false, url); }catch(e){ console.warn('createLink failed', e); }
+          });
+        }
+
+        // Clear editor (toolbar clear)
+        if(clearEditorBtn){
+          clearEditorBtn.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+          clearEditorBtn.addEventListener('click', function(){
+            if(editor) editor.innerHTML = '';
+            if(bodyInput) bodyInput.value = '';
+            if(preview) preview.style.display = 'none';
+          });
+        }
+
+        // Initialize editor content from server-provided last_body safely
+        try{
+          const rawLast = editor && editor.dataset ? editor.dataset.lastBody : '';
+          if(rawLast){
+            const safeHtml = (window.DOMPurify && DOMPurify.sanitize) ? DOMPurify.sanitize(rawLast) : rawLast;
+            editor.innerHTML = safeHtml;
+          }
+        }catch(e){ /* ignore parse errors */ }
+
+        // Preview handler: sanitize editor.innerHTML then show
+        previewBtn && previewBtn.addEventListener('click', function(){
+          if(!preview) return;
+          if(preview.style.display === 'none'){
+            const subjectEl = document.getElementById('subject');
+            const toEl = document.getElementById('to_email');
+            const fromEl = document.getElementById('from_email');
+            const subj = subjectEl ? subjectEl.value : '';
+            const to = toEl ? toEl.value : '';
+            const fr = fromEl ? fromEl.value : '';
+            let hdr = '<div style="margin-bottom:.75rem;padding:.5rem;border-radius:6px;background:#f8fafc;border:1px solid #e6eef8;">';
+            hdr += '<div style="font-weight:700;margin-bottom:.25rem;">' + (subj||'(no subject)') + '</div>';
+            hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
+            hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
+            hdr += '</div>';
+            const raw = (editor && editor.innerHTML) ? editor.innerHTML : '<i>(empty)</i>';
+            const safe = (window.DOMPurify && DOMPurify.sanitize) ? DOMPurify.sanitize(raw) : raw;
+            previewContent.innerHTML = hdr + safe;
+            preview.style.display = 'block';
+            this.textContent = 'Hide preview';
+          } else {
+            preview.style.display = 'none';
+            this.textContent = 'Preview';
+          }
+        });
+
+        // Secondary clear button (below preview)
+        if(clearBtn){
+          clearBtn.addEventListener('mousedown', function(ev){ ev.preventDefault(); });
+          clearBtn.addEventListener('click', function(){
+            if(editor) editor.innerHTML = '';
+            if(bodyInput) bodyInput.value = '';
+            if(preview) preview.style.display = 'none';
+          });
+        }
+
+        // On form submit, copy editor HTML into hidden input
+        form && form.addEventListener('submit', function(e){
+          if(bodyInput){ bodyInput.value = editor ? editor.innerHTML : ''; }
+        });
+
+        initDomain();
+      })();
+    </script>
+  </div>
+</body>
+</html>
