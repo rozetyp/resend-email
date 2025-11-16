@@ -439,12 +439,20 @@
               
               // 7a. Auto-clear form and message after 2 seconds
               setTimeout(() => {
+                console.log('Auto-clearing form...');
                 form.reset();
-                document.getElementById('body').value = '';
-                if (window.pell && window.pell.content) {
-                  window.pell.content.innerHTML = '';
-                }
+                
+                // Clear hidden body field
+                const bodyField = document.getElementById('body');
+                if (bodyField) bodyField.value = '';
+                
+                // Clear Pell editor
+                const pellContent = document.getElementById('pell');
+                if (pellContent) pellContent.innerHTML = '';
+                
+                // Clear message
                 messageContainer.innerHTML = '';
+                console.log('Form cleared');
               }, 2000);
               
             } catch (error) {
