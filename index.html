@@ -154,24 +154,6 @@
             <input type="hidden" id="body" name="body" value="" />
           </div>
 
-          <!-- PREVIEW MODAL -->
-          <div id="preview_modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="this.classList.add('hidden')">
-            <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6" onclick="event.stopPropagation()">
-              <div class="flex justify-between items-center mb-4">
-                <h3 class="font-semibold text-gray-900">Email Preview</h3>
-                <button type="button" onclick="document.getElementById('preview_modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
-              </div>
-              <div class="space-y-3 text-sm">
-                <div><span class="font-medium text-gray-700">Subject:</span> <span id="preview_subject" class="text-gray-600"></span></div>
-                <div><span class="font-medium text-gray-700">From:</span> <span id="preview_from" class="text-gray-600 font-mono text-xs"></span></div>
-                <div><span class="font-medium text-gray-700">To:</span> <span id="preview_to" class="text-gray-600 font-mono text-xs"></span></div>
-                <div class="pt-3 border-t border-gray-200">
-                  <div id="preview_content" class="text-gray-700"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- JS-controlled ERROR/SUCCESS ALERTS -->
           <div id="message_container">
             <!-- JS will inject success/error messages here -->
@@ -181,10 +163,7 @@
           <div id="error-message" class="hidden p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
 
           <!-- ACTION BUTTONS -->
-          <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3 mt-6">
-            <button type="button" class="mt-2 sm:mt-0 w-full sm:w-auto text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5" id="preview_btn">
-              Preview
-            </button>
+          <div class="flex flex-col sm:flex-row gap-2">
             <button type="submit" id="send_btn" class="w-full sm:w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
               Send Email
             </button>
@@ -306,24 +285,6 @@
             fetchDomainsBtn.disabled = false;
             fetchDomainsBtn.textContent = 'Load Domains';
           }
-        });
-
-        // ============ PREVIEW MODAL ============
-        const previewModal = document.getElementById('preview_modal');
-        const previewBtn = document.getElementById('preview_btn');
-
-        function renderPreview(){
-          document.getElementById('preview_subject').textContent = document.getElementById('subject').value || '(no subject)';
-          document.getElementById('preview_from').textContent = document.getElementById('from_email').value || '(no from)';
-          document.getElementById('preview_to').textContent = document.getElementById('to_email').value || '(no to)';
-          const pellContent = document.querySelector('#pell .pell-content');
-          document.getElementById('preview_content').innerHTML = pellContent?.innerHTML || '<p class="text-gray-400">(empty body)</p>';
-        }
-
-        previewBtn?.addEventListener('click', (e) => {
-          e.preventDefault();
-          renderPreview();
-          previewModal.classList.remove('hidden');
         });
 
         // ============ FORM SUBMISSION ============
