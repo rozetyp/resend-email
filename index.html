@@ -154,38 +154,19 @@
             <input type="hidden" id="body" name="body" value="" />
           </div>
 
-          <!-- PREVIEW SECTION -->
-          <div id="preview_modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div class="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
-              <!-- Header -->
-              <div class="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-semibold text-gray-900">Email Preview</h3>
-                <button type="button" id="preview_close_btn" class="text-gray-400 hover:text-gray-600 font-light text-3xl leading-none">×</button>
+          <!-- PREVIEW MODAL -->
+          <div id="preview_modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50" onclick="this.classList.add('hidden')">
+            <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-96 overflow-y-auto p-6" onclick="event.stopPropagation()">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-semibold text-gray-900">Email Preview</h3>
+                <button type="button" onclick="document.getElementById('preview_modal').classList.add('hidden')" class="text-gray-400 hover:text-gray-600 text-2xl">×</button>
               </div>
-              <!-- Content -->
-              <div class="overflow-y-auto flex-1 p-6">
-                <!-- Email metadata box -->
-                <div class="mb-6 p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-lg border border-blue-100">
-                  <div class="mb-3">
-                    <p class="text-xs text-gray-600 uppercase tracking-wide font-semibold">Subject</p>
-                    <p class="text-base font-semibold text-gray-900" id="preview_subject"></p>
-                  </div>
-                  <div class="grid grid-cols-2 gap-4">
-                    <div>
-                      <p class="text-xs text-gray-600 uppercase tracking-wide font-semibold">From</p>
-                      <p class="text-sm text-gray-700 font-mono" id="preview_from"></p>
-                    </div>
-                    <div>
-                      <p class="text-xs text-gray-600 uppercase tracking-wide font-semibold">To</p>
-                      <p class="text-sm text-gray-700 font-mono" id="preview_to"></p>
-                    </div>
-                  </div>
-                </div>
-                <!-- Email body -->
-                <div class="bg-white p-4 rounded-lg border border-gray-200">
-                  <div id="preview_content" class="prose prose-sm max-w-none text-gray-700">
-                    <!-- Preview content injected by JS -->
-                  </div>
+              <div class="space-y-3 text-sm">
+                <div><span class="font-medium text-gray-700">Subject:</span> <span id="preview_subject" class="text-gray-600"></span></div>
+                <div><span class="font-medium text-gray-700">From:</span> <span id="preview_from" class="text-gray-600 font-mono text-xs"></span></div>
+                <div><span class="font-medium text-gray-700">To:</span> <span id="preview_to" class="text-gray-600 font-mono text-xs"></span></div>
+                <div class="pt-3 border-t border-gray-200">
+                  <div id="preview_content" class="text-gray-700"></div>
                 </div>
               </div>
             </div>
@@ -327,46 +308,22 @@
           }
         });
 
-        // ============ PREVIEW FUNCTIONALITY ============
+        // ============ PREVIEW MODAL ============
         const previewModal = document.getElementById('preview_modal');
-        const previewContent = document.getElementById('preview_content');
         const previewBtn = document.getElementById('preview_btn');
-        const previewCloseBtn = document.getElementById('preview_close_btn');
 
         function renderPreview(){
-          const subjectEl = document.getElementById('subject');
-          const toEl = document.getElementById('to_email');
-          const fromEl = document.getElementById('from_email');
-          const subj = subjectEl ? subjectEl.value : '(no subject)';
-          const to = toEl ? toEl.value : '(no to)';
-          const fr = fromEl ? fromEl.value : '(no from)';
-          
-          // Populate metadata fields
-          document.getElementById('preview_subject').textContent = subj;
-          document.getElementById('preview_from').textContent = fr;
-          document.getElementById('preview_to').textContent = to;
-          
-          // Populate email body
+          document.getElementById('preview_subject').textContent = document.getElementById('subject').value || '(no subject)';
+          document.getElementById('preview_from').textContent = document.getElementById('from_email').value || '(no from)';
+          document.getElementById('preview_to').textContent = document.getElementById('to_email').value || '(no to)';
           const pellContent = document.querySelector('#pell .pell-content');
-          const bodyContent = pellContent ? pellContent.innerHTML : document.getElementById('body').value;
-          previewContent.innerHTML = (bodyContent || '<p class="text-gray-400 italic">(empty body)</p>');
+          document.getElementById('preview_content').innerHTML = pellContent?.innerHTML || '<p class="text-gray-400">(empty body)</p>';
         }
 
-        previewBtn && previewBtn.addEventListener('click', function(e){
+        previewBtn?.addEventListener('click', (e) => {
           e.preventDefault();
           renderPreview();
           previewModal.classList.remove('hidden');
-        });
-
-        previewCloseBtn && previewCloseBtn.addEventListener('click', function(){
-          previewModal.classList.add('hidden');
-        });
-
-        // Close modal when clicking outside
-        previewModal && previewModal.addEventListener('click', function(e){
-          if(e.target === previewModal){
-            previewModal.classList.add('hidden');
-          }
         });
 
         // ============ FORM SUBMISSION ============
