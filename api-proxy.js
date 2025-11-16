@@ -1,9 +1,11 @@
-// Minimal API proxy for Resend
+// Minimal API proxy for Resend + Static file server
 // This allows the browser app to securely call Resend without exposing API key
 // The API key is passed by the client, then proxied to Resend
 
 const http = require('http');
 const https = require('https');
+const fs = require('fs');
+const path = require('path');
 const url = require('url');
 
 const PORT = process.env.PORT || 3001;
@@ -14,7 +16,6 @@ const server = http.createServer((req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  res.setHeader('Content-Type', 'application/json');
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
@@ -23,14 +24,45 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Only proxy POST to /api/send and GET to /api/domains
+  // Route API calls
   if (req.method === 'POST' && req.url === '/api/send') {
+    res.setHeader('Content-Type', 'application/json');
     handleSendEmail(req, res);
   } else if (req.method === 'GET' && req.url === '/api/domains') {
+    res.setHeader('Content-Type', 'application/json');
     handleGetDomains(req, res);
   } else {
-    res.writeHead(404);
-    res.end(JSON.stringify({ error: 'Not found' }));
+    // Serve static files (index.html for root)
+    let filePath = req.url === '/' ? '/index.html' : req.url;
+    filePath = path.join(__dirname, filePath);
+    
+    // Security: prevent directory traversal
+    const realPath = path.resolve(filePath);
+    const baseDir = path.resolve(__dirname);
+    
+    if (!realPath.startsWith(baseDir)) {
+      res.writeHead(403, { 'Content-Type': 'text/plain' });
+      res.end('Forbidden');
+      return;
+    }
+    
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('404 Not Found');
+        return;
+      }
+      
+      // Set content type based on file extension
+      let contentType = 'text/plain';
+      if (filePath.endsWith('.html')) contentType = 'text/html';
+      else if (filePath.endsWith('.css')) contentType = 'text/css';
+      else if (filePath.endsWith('.js')) contentType = 'application/javascript';
+      else if (filePath.endsWith('.json')) contentType = 'application/json';
+      
+      res.writeHead(200, { 'Content-Type': contentType });
+      res.end(data);
+    });
   }
 });
 
