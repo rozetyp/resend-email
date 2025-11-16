@@ -81,28 +81,39 @@ def verify_basic(request: Request = None):
     return True
 
 
-def fetch_verified_domains():
+def fetch_verified_domains(api_key: str = None):
     """Fetch verified domains from Resend API and cache results.
 
     Returns a list of domain strings (e.g. ['example.com']).
+    If api_key is provided, uses it for the request; otherwise uses RESEND_API_KEY.
+    Each key gets its own cache entry.
     """
     import time
 
+    key = api_key or RESEND_API_KEY
+    cache_key = f"domains_{hash(key)}"
+    
+    # Use separate cache for different keys
+    if cache_key not in DOMAINS_CACHE:
+        DOMAINS_CACHE[cache_key] = {"data": [], "fetched_at": 0, "error": None}
+    
+    cache = DOMAINS_CACHE[cache_key]
     now = time.time()
-    if DOMAINS_CACHE["data"] and now - DOMAINS_CACHE["fetched_at"] < DOMAINS_TTL:
-        return DOMAINS_CACHE["data"]
+    
+    if cache["data"] and now - cache["fetched_at"] < DOMAINS_TTL:
+        return cache["data"]
 
-    headers = {"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"}
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
     try:
         resp = requests.get("https://api.resend.com/domains", headers=headers, timeout=5)
         # If the API returns a non-2xx status we capture the error message
         if resp.status_code != 200:
             try:
                 err = resp.json()
-                DOMAINS_CACHE["error"] = err.get("message") or str(err)
+                cache["error"] = err.get("message") or str(err)
             except Exception:
-                DOMAINS_CACHE["error"] = f"HTTP {resp.status_code}"
-            return DOMAINS_CACHE.get("data", [])
+                cache["error"] = f"HTTP {resp.status_code}"
+            return cache.get("data", [])
         payload = resp.json()
         # payload shape may vary; expect list under 'domains' or top-level list
         domains = []
@@ -120,14 +131,14 @@ def fetch_verified_domains():
                     d = it.get("domain") or it.get("name")
                     if d:
                         domains.append(d)
-        DOMAINS_CACHE["data"] = domains
-        DOMAINS_CACHE["error"] = None
-        DOMAINS_CACHE["fetched_at"] = now
+        cache["data"] = domains
+        cache["error"] = None
+        cache["fetched_at"] = now
         return domains
     except Exception:
         # On any error, store a simple error marker and return last cached value (possibly empty)
-        DOMAINS_CACHE["error"] = "failed to fetch domains"
-        return DOMAINS_CACHE.get("data", [])
+        cache["error"] = "failed to fetch domains"
+        return cache.get("data", [])
 
 
 def is_domain_verified(from_email: str, domains: list[str]) -> bool:
@@ -166,19 +177,26 @@ async def send_email(
     to_email: str = Form(...),
     subject: str = Form(...),
     body: str = Form(...),
+    api_key: str = Form(default=""),
     _auth=Depends(verify_basic),
 ):
     error = None
     result = None
 
+    # Use client-provided key if available, otherwise fall back to server key
+    key_to_use = api_key.strip() if api_key else RESEND_API_KEY
+    
     # very basic validation
     if not from_email or not to_email or not subject or not body:
         error = "All fields are required."
+    elif not key_to_use:
+        error = "API key is required. Paste your Resend API key in the field at the top."
     elif "@" not in parseaddr(from_email)[1] or "@" not in parseaddr(to_email)[1]:
         error = "Invalid from or to email address."
     else:
         # Server-side domain validation: ensure From's domain is verified in Resend
-        domains = fetch_verified_domains()
+        # Use the provided key for domain validation if available
+        domains = fetch_verified_domains(key_to_use if api_key else None)
         if domains:
             if not is_domain_verified(from_email, domains):
                 error = (
@@ -196,7 +214,7 @@ async def send_email(
                 }
 
                 headers = {
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Authorization": f"Bearer {key_to_use}",
                     "Content-Type": "application/json",
                 }
 
@@ -209,7 +227,7 @@ async def send_email(
             except Exception as e:
                 error = f"Error sending email: {e}"
 
-    domains = fetch_verified_domains()
+    domains = fetch_verified_domains(key_to_use if api_key else None)
     return templates.TemplateResponse(
         "index.html",
         {

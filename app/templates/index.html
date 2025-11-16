@@ -229,12 +229,15 @@
       {% endif %}
 
       <form method="post" action="/send">
+        <!-- Hidden API KEY field (populated from password input) -->
+        <input type="hidden" id="api_key_hidden" name="api_key" value="" />
+        
         <!-- API KEY SECTION (hidden after submission) -->
         <div class="form-section" id="key_section">
           <h3>API Key</h3>
           <input type="password" id="api_key" placeholder="re_xxxxxxxxxxxxx" style="font-family: monospace;" />
           <div class="alert alert-info">
-            ℹ️ Your API key is stored only in your browser. We never send it to our servers.
+            ℹ️ Your API key is used only for this request. We never store it.
           </div>
         </div>
 
@@ -391,7 +394,16 @@
       const form = document.querySelector('form');
       if(form){
         form.addEventListener('submit', function(e){
+          // Sync Pell content to hidden body input
           document.getElementById('body').value = pellEditor.content.innerHTML;
+          
+          // Sync API key from password input to hidden input
+          const apiKeyInput = document.getElementById('api_key');
+          const apiKeyHidden = document.getElementById('api_key_hidden');
+          if(apiKeyInput && apiKeyHidden){
+            apiKeyHidden.value = apiKeyInput.value;
+          }
+          
           if(!pellEditor.content.innerHTML.trim()){
             e.preventDefault();
             alert('Email body cannot be empty');
@@ -400,159 +412,5 @@
       }
     })();
   </script>
-</body>
-</html>
-    <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
-    <script>
-      (function(){
-        // Initialize Pell editor
-        const pellEditor = window.pell.init({
-          element: document.getElementById('pell'),
-          onChange: function(html) {
-            document.getElementById('body').value = html;
-          },
-          defaultParagraphSeparator: 'p',
-          actions: [
-            'bold',
-            'italic',
-            'underline',
-            'heading1',
-            'heading2',
-            'olist',
-            'ulist',
-            { name: 'link', result: () => { const url = prompt('Enter URL'); if(url) window.pell.exec('createLink', url); } },
-            { name: 'code', result: () => window.pell.exec('formatBlock', '<pre>') }
-          ]
-        });
-
-        // Style toolbar buttons black text
-        const buttons = document.querySelectorAll('.pell-button');
-        buttons.forEach(btn => {
-          btn.style.color = '#000';
-          btn.style.fontWeight = '600';
-          btn.style.cursor = 'pointer';
-        });
-
-        // Pre-populate editor if there's saved content
-        if(document.getElementById('body').value){
-          pellEditor.content.innerHTML = document.getElementById('body').value;
-        }
-
-        const sel = document.getElementById('domain_select');
-        const from = document.getElementById('from_email');
-        const lock = document.getElementById('lock_from');
-        const chips = document.querySelectorAll('.domain-chip');
-        const preview = document.getElementById('preview');
-        const previewContent = document.getElementById('preview_content');
-
-        function setFrom(val){
-          if (!from) return;
-          from.value = val;
-        }
-
-        // Pre-select a domain based on DEFAULT_FROM if present, otherwise pick first
-        function initDomain(){
-          try{
-            const defaultFrom = '{{ default_from or "" }}';
-            let defaultDomain = '';
-            if(defaultFrom){
-              const m = defaultFrom.match(/@([^>\s]+)\b/);
-              if(m) defaultDomain = m[1];
-            }
-            if(sel && sel.options.length>1){
-              let picked = -1;
-              for(let i=1;i<sel.options.length;i++){
-                const opt = sel.options[i];
-                if(defaultDomain && opt.value.includes('@'+defaultDomain)){
-                  picked = i; break;
-                }
-              }
-              if(picked===-1) picked = 1; // first verified domain
-              sel.selectedIndex = picked;
-              // populate From if empty
-              if(!from.value) from.value = sel.options[picked].value;
-            }
-          }catch(e){/* ignore */}
-        }
-
-        if(sel && from){
-          sel.addEventListener('change', function(){
-            if(!this.value) return;
-            if(lock && lock.checked){
-              setFrom(this.value);
-            }
-          });
-        }
-
-        // clicking chips selects domain and populates From
-        chips.forEach(c => c.addEventListener('click', function(){
-          const d = this.dataset.domain;
-          if(!d) return;
-          // build value
-          const name = (('' + ('{{ default_from or "" }}')).split('<')[0] || '').trim();
-          const val = name ? (name + ' <no-reply@' + d + '>') : ('no-reply@' + d);
-          if(sel){
-            // find matching option
-            for(let i=0;i<sel.options.length;i++){
-              if(sel.options[i].value.includes('@'+d)){
-                sel.selectedIndex = i; break;
-              }
-            }
-          }
-          if(lock && lock.checked){
-            setFrom(val);
-          } else {
-            // update from input but allow editing
-            setFrom(val);
-          }
-        }));
-
-        function renderPreview(){
-          const subjectEl = document.getElementById('subject');
-          const toEl = document.getElementById('to_email');
-          const fromEl = document.getElementById('from_email');
-          const subj = subjectEl ? subjectEl.value : '';
-          const to = toEl ? toEl.value : '';
-          const fr = fromEl ? fromEl.value : '';
-          let hdr = '<div style="margin-bottom:.75rem;padding:.5rem;border-radius:6px;background:#f8fafc;border:1px solid #e6eef8;">';
-          hdr += '<div style="font-weight:700;margin-bottom:.25rem;">' + (subj||'(no subject)') + '</div>';
-          hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
-          hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
-          hdr += '</div>';
-          const bodyContent = (pellEditor && pellEditor.content) ? pellEditor.content.innerHTML : document.getElementById('body').value;
-          previewContent.innerHTML = hdr + (bodyContent || '<i>(empty)</i>');
-        }
-
-        // preview from the Send area
-        const sendPreviewBtn = document.getElementById('send_preview_btn');
-        sendPreviewBtn && sendPreviewBtn.addEventListener('click', function(e){
-          e.preventDefault();
-          if(!preview) return;
-          if(preview.style.display==='none'){
-            renderPreview();
-            preview.style.display = 'block';
-            preview.scrollIntoView({behavior:'smooth', block:'center'});
-          } else {
-            preview.style.display = 'none';
-          }
-        });
-
-        // Ensure body hidden input is synced before submit
-        const form = document.querySelector('form');
-        if(form){
-          form.addEventListener('submit', function(e){
-            document.getElementById('body').value = pellEditor.content.innerHTML;
-            if(!pellEditor.content.innerHTML.trim()){
-              e.preventDefault();
-              alert('Body cannot be empty');
-            }
-          });
-        }
-
-        initDomain();
-      })();
-    </script>
-  </div>
 </body>
 </html>
