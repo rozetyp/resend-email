@@ -437,19 +437,6 @@
                 </div>
               `;
               
-              // 7a. Reset form silently after 500ms (keep success message visible)
-              setTimeout(() => {
-                form.reset();
-                
-                // Clear hidden body field
-                const bodyField = document.getElementById('body');
-                if (bodyField) bodyField.value = '';
-                
-                // Clear Pell editor content (not the container)
-                const pellContent = document.querySelector('.pell-content');
-                if (pellContent) pellContent.innerHTML = '';
-              }, 500);
-              
             } catch (error) {
               // 8. Show failure message with actionable guidance
               let errorMsg = error.message;
