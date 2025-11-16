@@ -68,9 +68,8 @@
   <!-- ============ HERO SECTION ============ -->
   <div class="bg-white border-b border-gray-200 py-12">
     <div class="max-w-3xl mx-auto px-4 sm:px-8 text-center">
-      <h2 class="text-3xl font-bold text-gray-900 mb-3">Send Resend Emails from Your Browser</h2>
-      <p class="text-gray-600 text-lg mb-4">No code. No accounts. No storage.</p>
-      <p class="text-gray-500 text-sm">Paste your Resend API key, compose an email, and send — all from a simple web interface.</p>
+      <h2 class="text-3xl font-bold text-gray-900 mb-2">Send Resend Emails from Your Browser</h2>
+      <p class="text-gray-600">Paste your API key, compose, send. No code required.</p>
     </div>
   </div>
 
@@ -199,31 +198,11 @@
           </div>
         </form>
 
-        <!-- ============ FAQ & SECURITY ============ -->
-        <div class="mt-12 pt-8 border-t border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900 mb-6">Security & FAQ</h3>
-          
-          <div class="space-y-4">
-            <div>
-              <h4 class="font-medium text-gray-900 mb-2">🔒 Is my API key safe?</h4>
-              <p class="text-sm text-gray-600">Yes. Your key is only used in your browser. It's sent directly to Resend's API and is never logged or stored on our server.</p>
-            </div>
-            
-            <div>
-              <h4 class="font-medium text-gray-900 mb-2">📧 Do you store my emails?</h4>
-              <p class="text-sm text-gray-600">No. There is no database. Email bodies are forwarded to Resend and discarded immediately after sending.</p>
-            </div>
-            
-            <div>
-              <h4 class="font-medium text-gray-900 mb-2">🚀 Can I use this for production?</h4>
-              <p class="text-sm text-gray-600">Yes, but you're responsible for domain setup (SPF/DKIM) and compliance with anti-spam policies. Best used for testing and one-off sends.</p>
-            </div>
-            
-            <div>
-              <h4 class="font-medium text-gray-900 mb-2">💾 Can I self-host this?</h4>
-              <p class="text-sm text-gray-600">Yes! It's open-source. You can deploy it to Railway, Vercel, or your own server. <a href="https://github.com/rozetyp/resend-email" class="text-blue-600 hover:underline">View on GitHub</a>.</p>
-            </div>
-          </div>
+        <!-- ============ SECURITY & INFO ============ -->
+        <div class="mt-10 pt-8 border-t border-gray-200 space-y-3 text-sm text-gray-600">
+          <p><strong>Your API key</strong> is used only in your browser and sent directly to Resend. Never stored.</p>
+          <p><strong>Your emails</strong> are forwarded to Resend and not persisted anywhere.</p>
+          <p><strong>Self-host?</strong> It's open-source. Deploy to Railway, Vercel, or anywhere. <a href="https://github.com/rozetyp/resend-email" class="text-blue-600 hover:underline">GitHub</a>.</p>
         </div>
       </div>
     </div>
