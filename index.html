@@ -13,55 +13,47 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Pell Rich Text Editor CSS -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
-  <!-- Google Analytics (placeholder) -->
-  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    // gtag('config', 'G-XXXXXXXXXX');
-  </script>
   
   <style>
-    /* Pell editor custom styling */
+    /* Custom styles for the Pell editor to match the Tailwind theme */
     .pell-content {
       outline: 0;
       min-height: 250px;
-      padding: 0.75rem;
-      background-color: #ffffff;
-      color: #111827;
-      border: 1px solid #d1d5db;
+      padding: 0.75rem; /* p-3 */
+      background-color: #ffffff; /* bg-white */
+      color: #111827; /* text-gray-900 */
+      border: 1px solid #d1d5db; /* border-gray-300 */
       border-top: 0;
-      border-bottom-left-radius: 0.5rem;
-      border-bottom-right-radius: 0.5rem;
+      border-bottom-left-radius: 0.5rem; /* rounded-lg */
+      border-bottom-right-radius: 0.5rem; /* rounded-lg */
       line-height: 1.6;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
     
     .pell-actionbar {
-      background-color: #f9fafb;
-      border: 1px solid #d1d5db;
-      border-bottom: 1px solid #e5e7eb;
-      border-top-left-radius: 0.5rem;
-      border-top-right-radius: 0.5rem;
+      background-color: #f9fafb; /* bg-gray-50 */
+      border: 1px solid #d1d5db; /* border-gray-300 */
+      border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+      border-top-left-radius: 0.5rem; /* rounded-lg */
+      border-top-right-radius: 0.5rem; /* rounded-lg */
       padding: 0.25rem;
     }
     
     .pell-button {
-      color: #374151;
-      border-radius: 0.375rem;
+      color: #374151; /* text-gray-700 */
+      border-radius: 0.375rem; /* rounded-md */
       transition: background-color 0.2s ease, color 0.2s ease;
     }
     
     .pell-button:hover {
-      background-color: #e5e7eb;
+      background-color: #e5e7eb; /* bg-gray-200 */
     }
     
     .pell-button-selected {
-      background-color: #dbeafe;
-      color: #1e40af;
+      background-color: #dbeafe; /* bg-blue-100 */
+      color: #1e40af; /* text-blue-800 */
     }
 
+    /* Basic styling for the previewed email */
     #preview_content h1 { font-size: 1.875rem; font-weight: 600; margin-bottom: 0.5rem; }
     #preview_content h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
     #preview_content p { margin-bottom: 1rem; }
@@ -69,395 +61,468 @@
     #preview_content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
     #preview_content a { color: #2563eb; text-decoration: underline; }
     #preview_content pre { background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
-
-    /* Stripe-inspired minimalist design */
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    .hero-divider { background: linear-gradient(to bottom, #ffffff 0%, #f9fafb 100%); }
   </style>
 </head>
 
-<body class="bg-white text-gray-900">
-  <!-- ============ HEADER ============ -->
-  <div class="border-b border-gray-200">
-    <div class="max-w-4xl mx-auto px-4 sm:px-8 py-4 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <h1 class="text-xl font-bold">Resend Pad</h1>
-        <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" title="View on GitHub" class="text-gray-400 hover:text-gray-600">
-          <svg class="w-5 h-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+<body class="bg-gray-50">
+  <!-- ============ HERO SECTION ============ -->
+  <div class="bg-white border-b border-gray-200 py-12">
+    <div class="max-w-3xl mx-auto px-4 sm:px-8 text-center">
+      <h2 class="text-3xl font-bold text-gray-900 mb-3">Send Resend Emails from Your Browser</h2>
+      <p class="text-gray-600 text-lg mb-4">No code. No accounts. No storage.</p>
+      <p class="text-gray-500 text-sm">Paste your Resend API key, compose an email, and send — all from a simple web interface.</p>
+    </div>
+  </div>
+
+  <!-- ============ MAIN APP CONTAINER ============ -->
+  <div class="w-full p-4 sm:p-8 flex justify-center">
+    
+    <div class="w-full max-w-3xl bg-white text-gray-900 rounded-xl shadow-lg p-6 sm:p-8">
+      
+      <div class="flex items-center justify-center mb-2 gap-3">
+        <h1 class="text-2xl font-bold text-center text-gray-900">
+          Resend Pad
+        </h1>
+        <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" title="View source on GitHub" class="text-gray-400 hover:text-gray-700 transition-colors">
+          <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
             <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.085 8.199-11.386 0-6.627-5.373-12-12-12z"/>
           </svg>
         </a>
       </div>
-      <a href="#editor" class="text-sm text-gray-600 hover:text-gray-900 font-medium">Editor ↓</a>
-    </div>
-  </div>
-
-  <!-- ============ HERO ============ -->
-  <div class="hero-divider py-16 sm:py-20 px-4 sm:px-8">
-    <div class="max-w-4xl mx-auto text-center">
-      <h2 class="text-4xl sm:text-5xl font-bold text-gray-900 mb-4 leading-tight">
-        Send Resend emails<br/>from your browser
-      </h2>
-      <p class="text-lg text-gray-600 mb-10">
-        No code. No accounts. No storage.<br/>
-        Paste your API key, compose, send.
+      
+      <p class="text-center text-sm text-gray-600 mb-6">
+        Send emails with Resend using your own API key. No server relay. Built for developers.
       </p>
       
-      <!-- Trust Signals -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8 mb-12">
-        <div>
-          <div class="text-3xl font-light text-gray-300 mb-2">✓</div>
-          <p class="text-sm text-gray-600"><strong>Bring Your Own Key</strong><br/>Just proxy your calls to Resend</p>
-        </div>
-        <div>
-          <div class="text-3xl font-light text-gray-300 mb-2">✓</div>
-          <p class="text-sm text-gray-600"><strong>No Storage</strong><br/>No accounts, DB, or logging</p>
-        </div>
-        <div>
-          <div class="text-3xl font-light text-gray-300 mb-2">✓</div>
-          <p class="text-sm text-gray-600"><strong>Open Source</strong><br/>Audit or self-host freely</p>
-        </div>
-      </div>
-
-      <a href="#editor" class="inline-block px-7 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors">
-        Open Editor
-      </a>
-    </div>
-  </div>
-
-  <!-- ============ HOW IT WORKS ============ -->
-  <div class="bg-gray-50 border-b border-gray-200 py-16 px-4 sm:px-8">
-    <div class="max-w-4xl mx-auto">
-      <h3 class="text-2xl font-bold text-gray-900 mb-12 text-center">How It Works</h3>
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 mb-10">
-        <div class="text-center">
-          <div class="text-5xl font-light text-gray-200 mb-3">1</div>
-          <p class="font-medium text-gray-900 mb-2">Paste Your Key</p>
-          <p class="text-sm text-gray-600">Enter your Resend API key (session-only, never stored)</p>
-        </div>
-        <div class="text-center">
-          <div class="text-5xl font-light text-gray-200 mb-3">2</div>
-          <p class="font-medium text-gray-900 mb-2">Compose</p>
-          <p class="text-sm text-gray-600">Fill To, From, Subject, and body with our editor</p>
-        </div>
-        <div class="text-center">
-          <div class="text-5xl font-light text-gray-200 mb-3">3</div>
-          <p class="font-medium text-gray-900 mb-2">Send</p>
-          <p class="text-sm text-gray-600">Click send. We proxy to Resend. Email delivered.</p>
-        </div>
-      </div>
-      
-      <!-- Flow Diagram -->
-      <div class="bg-white border border-gray-200 rounded-lg p-6">
-        <code class="text-xs text-gray-600 font-mono block text-center">
-          Your Key → Resend Pad → Resend API → ✓ Sent
-        </code>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============ EDITOR (MAIN FORM) ============ -->
-  <div id="editor" class="py-16 px-4 sm:px-8 scroll-mt-20">
-    <div class="max-w-2xl mx-auto">
-      <form id="send_form">
-        
-        <!-- API KEY INPUT -->
-        <div class="mb-6">
-          <label for="api_key" class="block mb-2 text-sm font-medium text-gray-900">Your Resend API Key</label>
-          <input 
-            type="password" 
-            id="api_key" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            placeholder="re_xxxxxxxxxxxxxxxxxxxxx" 
-            style="font-family: 'Courier New', monospace; font-size: 0.875rem;"
-            required
-          />
-          <p class="mt-2 text-xs text-gray-600">
-            🔒 Your key is only used in your browser. It's sent directly to Resend's API and never stored on our server.
-          </p>
-        </div>
-
-        <!-- LOAD DOMAINS BUTTON -->
-        <div class="mb-6">
-          <button 
-            type="button" 
-            id="load_domains_btn" 
-            class="w-full px-4 py-2 text-sm font-medium text-white bg-gray-600 rounded-lg hover:bg-gray-700 transition-colors"
-          >
-            Load Verified Domains
-          </button>
-          <p class="mt-2 text-xs text-gray-600">Optional: Click to auto-populate "From" with your verified domains</p>
-        </div>
-
-        <!-- MESSAGE CONTAINER (for domain loading / errors) -->
-        <div id="messageContainer"></div>
-
-        <!-- FROM INPUT -->
-        <div class="mb-6">
-          <label for="from" class="block mb-2 text-sm font-medium text-gray-900">From (Email)</label>
-          <input 
-            type="email" 
-            id="from" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            placeholder="noreply@example.com" 
-            required
-          />
-          <p class="mt-2 text-xs text-gray-600">Must be verified in your Resend account</p>
-        </div>
-
-        <!-- TO INPUT -->
-        <div class="mb-6">
-          <label for="to" class="block mb-2 text-sm font-medium text-gray-900">To (Email)</label>
-          <input 
-            type="email" 
-            id="to" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            placeholder="recipient@example.com" 
-            required
-          />
-        </div>
-
-        <!-- SUBJECT INPUT -->
-        <div class="mb-6">
-          <label for="subject" class="block mb-2 text-sm font-medium text-gray-900">Subject</label>
-          <input 
-            type="text" 
-            id="subject" 
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-900 focus:border-transparent"
-            placeholder="Hello from Resend Pad!" 
-            required
-          />
-        </div>
-
-        <!-- BODY (PELL EDITOR) -->
-        <div class="mb-6">
-          <label class="block mb-2 text-sm font-medium text-gray-900">Email Body (Rich Text)</label>
-          <div id="pell"></div>
-          <textarea 
-            id="body_textarea" 
-            style="display:none;"
-            required
-          ></textarea>
-        </div>
-
-        <!-- PREVIEW TOGGLE -->
-        <div class="mb-6">
-          <button 
-            type="button" 
-            id="preview_btn" 
-            class="text-sm font-medium text-blue-600 hover:text-blue-700 underline"
-          >
-            Preview Email
-          </button>
-        </div>
-
-        <!-- PREVIEW MODAL -->
-        <div id="preview_modal" style="display:none;" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div class="bg-white rounded-lg shadow-lg max-w-2xl w-full max-h-96 overflow-y-auto">
-            <div class="p-6 border-b border-gray-200 flex justify-between items-center">
-              <h4 class="font-bold text-gray-900">Email Preview</h4>
-              <button type="button" id="preview_close_btn" class="text-gray-600 hover:text-gray-900 text-2xl">&times;</button>
+      <div class="form-container">
+        <form id="send_form">
+          
+          <!-- API KEY INPUT -->
+          <div class="mb-5">
+            <label for="api_key" class="block mb-2 text-sm font-medium text-gray-900">Your Resend API Key</label>
+            <input 
+              type="password" 
+              id="api_key" 
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="re_xxxxxxxxxxxxxxxxxxxxx" 
+              style="font-family: 'Courier New', monospace;"
+              required
+            />
+            <div class="p-3 mt-3 text-sm text-blue-800 rounded-lg bg-blue-50" role="alert">
+              🔒 <strong>Trust & Security:</strong> Your key is only used in your browser. It's sent *directly* to Resend's API and is never logged or stored on our server. This page is open-source.
+              <div class="mt-2 text-xs text-blue-700">
+                <strong>Note:</strong> You need a "Full Access" or "Sending" API key. "Sending Only" keys cannot list domains. 
+                <a href="https://resend.com/api-keys" target="_blank" class="underline hover:no-underline">Create a new key →</a>
+              </div>
             </div>
-            <div id="preview_content" class="p-6"></div>
+          </div>
+
+          <!-- FROM EMAIL -->
+          <div class="mb-5">
+            <label for="from_email" class="block mb-2 text-sm font-medium text-gray-900">
+              From Email 
+              <span class="text-gray-500 font-normal">(must be verified in Resend)</span>
+            </label>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <input 
+                id="from_email" 
+                name="from_email" 
+                type="text" 
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="no-reply@yourdomain.com" 
+                required 
+              />
+              <button type="button" id="fetch_domains_btn" class="flex-shrink-0 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2.5">
+                Load Domains
+              </button>
+            </div>
+            <div id="domains_list" class="hidden mt-3 p-3 text-sm text-blue-800 rounded-lg bg-blue-50"></div>
+          </div>
+
+          <!-- TO EMAIL -->
+          <div class="mb-5">
+            <label for="to_email" class="block mb-2 text-sm font-medium text-gray-900">To Email</label>
+            <input 
+              id="to_email" 
+              name="to_email" 
+              type="email" 
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="recipient@example.com" 
+              required 
+            />
+          </div>
+
+          <!-- SUBJECT -->
+          <div class="mb-5">
+            <label for="subject" class="block mb-2 text-sm font-medium text-gray-900">Subject</label>
+            <input 
+              id="subject" 
+              name="subject" 
+              type="text" 
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="Your email subject" 
+              required 
+            />
+          </div>
+
+          <!-- EMAIL BODY (PELL EDITOR) -->
+          <div class="mb-5">
+            <label for="pell" class="block mb-2 text-sm font-medium text-gray-900">Email Body</label>
+            <div id="pell" class="pell"></div>
+            <input type="hidden" id="body" name="body" value="" />
+          </div>
+
+          <!-- PREVIEW SECTION -->
+          <div id="preview" class="hidden my-6 p-6 border border-gray-200 rounded-lg">
+            <h3 class="text-xl font-semibold mb-4 text-gray-900">Email Preview</h3>
+            <div id="preview_content" class="prose prose-sm max-w-none p-4 border border-gray-300 rounded-lg bg-gray-50 text-gray-900">
+              <!-- Preview content injected by JS -->
+            </div>
+          </div>
+
+          <!-- JS-controlled ERROR/SUCCESS ALERTS -->
+          <div id="message_container">
+            <!-- JS will inject success/error messages here -->
+          </div>
+          
+          <!-- Non-blocking JS error message -->
+          <div id="error-message" class="hidden p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
+
+          <!-- ACTION BUTTONS -->
+          <div class="flex flex-col-reverse sm:flex-row sm:justify-end sm:gap-3 mt-6">
+            <button type="button" class="mt-2 sm:mt-0 w-full sm:w-auto text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5" id="preview_btn">
+              Preview
+            </button>
+            <button type="submit" id="send_btn" class="w-full sm:w-auto text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
+              Send Email
+            </button>
+          </div>
+        </form>
+
+        <!-- ============ FAQ & SECURITY ============ -->
+        <div class="mt-12 pt-8 border-t border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900 mb-6">Security & FAQ</h3>
+          
+          <div class="space-y-4">
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">🔒 Is my API key safe?</h4>
+              <p class="text-sm text-gray-600">Yes. Your key is only used in your browser. It's sent directly to Resend's API and is never logged or stored on our server.</p>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">📧 Do you store my emails?</h4>
+              <p class="text-sm text-gray-600">No. There is no database. Email bodies are forwarded to Resend and discarded immediately after sending.</p>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">🚀 Can I use this for production?</h4>
+              <p class="text-sm text-gray-600">Yes, but you're responsible for domain setup (SPF/DKIM) and compliance with anti-spam policies. Best used for testing and one-off sends.</p>
+            </div>
+            
+            <div>
+              <h4 class="font-medium text-gray-900 mb-2">💾 Can I self-host this?</h4>
+              <p class="text-sm text-gray-600">Yes! It's open-source. You can deploy it to Railway, Vercel, or your own server. <a href="https://github.com/rozetyp/resend-email" class="text-blue-600 hover:underline">View on GitHub</a>.</p>
+            </div>
           </div>
         </div>
-
-        <!-- SEND BUTTON -->
-        <button 
-          type="submit" 
-          id="send_btn" 
-          class="w-full px-4 py-3 bg-gray-900 text-white font-medium rounded-lg hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          Send Email
-        </button>
-      </form>
-    </div>
-  </div>
-
-  <!-- ============ SECURITY & FAQ ============ -->
-  <div class="bg-gray-50 border-t border-gray-200 py-16 px-4 sm:px-8">
-    <div class="max-w-2xl mx-auto">
-      <h3 class="text-2xl font-bold text-gray-900 mb-8">Security & Trust</h3>
-      
-      <div class="space-y-6">
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">Do you store my API key?</h4>
-          <p class="text-sm text-gray-600">No. Your key is only used in the Authorization header when sending to Resend and is never persisted in logs or a database.</p>
-        </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">Do you store my emails?</h4>
-          <p class="text-sm text-gray-600">No. There is no database. Email bodies are forwarded to Resend and discarded after the request is completed.</p>
-        </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">Can I self-host this?</h4>
-          <p class="text-sm text-gray-600">Yes. It's a single Node.js proxy + HTML file. Deploy to Railway, Vercel, or your own server. <a href="https://github.com/rozetyp/resend-email" class="text-blue-600 hover:underline">View on GitHub</a>.</p>
-        </div>
-        
-        <div>
-          <h4 class="font-medium text-gray-900 mb-2">Can I use this for production?</h4>
-          <p class="text-sm text-gray-600">Yes, but you're responsible for domain setup (SPF/DKIM) and compliance with anti-spam policies and Resend's terms.</p>
-        </div>
       </div>
     </div>
   </div>
 
-  <!-- ============ FOOTER ============ -->
-  <div class="border-t border-gray-200 py-8 px-4 sm:px-8 text-center text-xs text-gray-600">
-    <p>
+  <!-- ============ PELL EDITOR & INTERACTIONS ============ -->
+  <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
+  <script>
+    // Auto-detect API URL based on environment
+    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+      ? 'http://localhost:3001'
+      : `${window.location.protocol}//${window.location.host}`;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // ============ PELL EDITOR ============
+        window.pell.init({
+          element: document.getElementById('pell'),
+          onChange: function(html) {
+            document.getElementById('body').value = html;
+          },
+          defaultParagraphSeparator: 'p',
+          actions: [
+            'bold',
+            'italic',
+            'underline',
+            'heading1',
+            'heading2',
+            'olist',
+            'ulist',
+            { name: 'link', result: () => { const url = prompt('Enter URL'); if(url) window.pell.exec('createLink', url); } },
+            { name: 'code', result: () => window.pell.exec('formatBlock', '<pre>') }
+          ]
+        });
+
+        // Pre-populate editor if there's saved content
+        const pellContentElement = document.querySelector('#pell .pell-content');
+        if(pellContentElement && document.getElementById('body').value){
+          pellContentElement.innerHTML = document.getElementById('body').value;
+        }
+
+        // ============ DOMAIN FETCHING ============
+        const fetchDomainsBtn = document.getElementById('fetch_domains_btn');
+        const domainsList = document.getElementById('domains_list');
+        const apiKeyInput = document.getElementById('api_key');
+        const fromEmailInput = document.getElementById('from_email');
+
+        fetchDomainsBtn.addEventListener('click', async function(e) {
+          e.preventDefault();
+          const apiKey = apiKeyInput.value.trim();
+          
+          if (!apiKey) {
+            domainsList.textContent = '❌ Please enter your Resend API key first.';
+            domainsList.classList.remove('hidden');
+            return;
+          }
+
+          fetchDomainsBtn.disabled = true;
+          fetchDomainsBtn.textContent = 'Loading...';
+          domainsList.classList.add('hidden');
+
+          try {
+            // Call Resend API to get domains
+            const response = await fetch(`${API_URL}/api/domains`, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${apiKey}`
+              }
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+              // Handle different error scenarios
+              if (response.status === 401 || response.status === 403) {
+                throw new Error(`Unauthorized: Your API key may be "Sending Only" or invalid. Use a "Full Access" key to list domains. Get one at https://resend.com/api-keys`);
+              } else if (response.status === 429) {
+                throw new Error(`Rate limited: Too many requests. Wait a moment and try again.`);
+              } else {
+                const errorMsg = data.message || data.error || `API error: ${response.status}`;
+                throw new Error(errorMsg);
+              }
+            }
+
+            const domains = data.data || [];
+            
+            if (domains.length === 0) {
+              domainsList.textContent = '❌ No verified domains found. Add one in your Resend dashboard at https://resend.com/domains';
+              domainsList.classList.remove('hidden');
+            } else {
+              // Create domain selector
+              let html = '<strong>Select a verified domain:</strong><div class="mt-2 flex flex-wrap gap-2">';
+              domains.forEach(domain => {
+                html += `<button type="button" class="domain-btn text-xs font-medium px-2.5 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-domain="${domain.name}">${domain.name}</button>`;
+              });
+              html += '</div>';
+              domainsList.innerHTML = html;
+              domainsList.classList.remove('hidden');
+
+              // Add click handlers to domain buttons
+              document.querySelectorAll('.domain-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                  e.preventDefault();
+                  const domain = this.dataset.domain;
+                  const defaultFrom = fromEmailInput.value.split('@')[0] || 'noreply';
+                  fromEmailInput.value = `${defaultFrom}@${domain}`;
+                  domainsList.classList.add('hidden');
+                });
+              });
+            }
+          } catch (error) {
+            domainsList.innerHTML = `<strong>❌ Failed to fetch domains:</strong><div class="mt-1 text-xs">${error.message}</div><div class="mt-2 text-xs text-gray-600">Still having issues? You can manually enter your From email (must be verified in Resend).</div>`;
+            domainsList.classList.remove('hidden');
+            console.error('Domain fetch error:', error);
+          } finally {
+            fetchDomainsBtn.disabled = false;
+            fetchDomainsBtn.textContent = 'Load Domains';
+          }
+        });
+
+        // ============ PREVIEW FUNCTIONALITY ============
+        const preview = document.getElementById('preview');
+        const previewContent = document.getElementById('preview_content');
+        const previewBtn = document.getElementById('preview_btn');
+
+        function renderPreview(){
+          const subjectEl = document.getElementById('subject');
+          const toEl = document.getElementById('to_email');
+          const fromEl = document.getElementById('from_email');
+          const subj = subjectEl ? subjectEl.value : '(no subject)';
+          const to = toEl ? toEl.value : '(no to)';
+          const fr = fromEl ? fromEl.value : '(no from)';
+          
+          let hdr = '<div class="mb-4 p-4 rounded-lg bg-gray-100 border border-gray-300">';
+          hdr += '<div class="font-semibold text-lg text-gray-900">' + (subj) + '</div>';
+          hdr += '<div class="text-sm text-gray-600 mt-1"><strong>From:</strong> ' + (fr) + '</div>';
+          hdr += '<div class="text-sm text-gray-600"><strong>To:</strong> ' + (to) + '</div>';
+          hdr += '</div>';
+          
+          const pellContent = document.querySelector('#pell .pell-content');
+          const bodyContent = pellContent ? pellContent.innerHTML : document.getElementById('body').value;
+          previewContent.innerHTML = hdr + '<div class="email-body-preview">' + (bodyContent || '<em>(empty body)</em>') + '</div>';
+        }
+
+        previewBtn && previewBtn.addEventListener('click', function(e){
+          e.preventDefault();
+          if(!preview) return;
+          if(preview.classList.contains('hidden')){
+            renderPreview();
+            preview.classList.remove('hidden');
+            preview.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            previewBtn.textContent = 'Hide Preview';
+          } else {
+            preview.classList.add('hidden');
+            previewBtn.textContent = 'Preview';
+          }
+        });
+
+        // ============ FORM SUBMISSION ============
+        const form = document.getElementById('send_form');
+        const errorDiv = document.getElementById('error-message');
+        const messageContainer = document.getElementById('message_container');
+        const sendBtn = document.getElementById('send_btn');
+
+        if(form){
+          form.addEventListener('submit', async function(e){
+            e.preventDefault(); // Stop default form submission
+            console.log('Form submitted');
+            
+            // 0. Clear previous messages
+            errorDiv.classList.add('hidden');
+            errorDiv.textContent = '';
+            messageContainer.innerHTML = ''; // Clear server-rendered messages
+
+            // 1. Sync Pell content to hidden body input
+            const pellContent = document.querySelector('#pell .pell-content');
+            if (!pellContent) {
+              console.error('Pell editor content area not found');
+              errorDiv.textContent = 'Error: Email editor not loaded correctly. Try refreshing the page.';
+              errorDiv.classList.remove('hidden');
+              return;
+            }
+            const bodyHtml = pellContent.innerHTML;
+            document.getElementById('body').value = bodyHtml;
+            
+            // 2. Non-blocking validation
+            if(!bodyHtml.trim()){
+              errorDiv.textContent = 'Email body cannot be empty.';
+              errorDiv.classList.remove('hidden');
+              pellContent.focus();
+              return;
+            }
+
+            // 3. Get all form data
+            const apiKey = document.getElementById('api_key').value;
+            const from = document.getElementById('from_email').value;
+            const to = document.getElementById('to_email').value;
+            const subject = document.getElementById('subject').value;
+            const body = document.getElementById('body').value;
+
+            console.log('Form data:', { apiKey: '***', from, to, subject, bodyLength: body.length });
+
+            if (!apiKey) {
+              errorDiv.textContent = 'API Key cannot be empty.';
+              errorDiv.classList.remove('hidden');
+              document.getElementById('api_key').focus();
+              return;
+            }
+            
+            // 4. Update UI to show sending state
+            sendBtn.disabled = true;
+            sendBtn.textContent = 'Sending...';
+
+            try {
+              // 5. Construct API request
+              const payload = {
+                from: from,
+                to: [to], // Resend API expects 'to' as an array
+                subject: subject,
+                html: body
+              };
+
+              console.log('Sending to Resend API...');
+              console.log('Payload:', payload);
+
+              // 6. Send via API proxy to Resend
+              const response = await fetch(`${API_URL}/api/send`, {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${apiKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+              });
+
+              console.log('Response status:', response.status);
+
+              const data = await response.json();
+              console.log('Response data:', data);
+
+              if (!response.ok) {
+                // Handle API errors (e.g., validation, auth)
+                const errorMsg = data.message || 'An unknown error occurred.';
+                throw new Error(`API Error (${data.name}): ${errorMsg}`);
+              }
+              
+              // 7. Show success message
+              messageContainer.innerHTML = `
+                <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
+                  <span class="font-medium">✓ Email Sent Successfully!</span>
+                  <div class="mt-2 p-3 bg-green-100 rounded font-mono text-xs">
+                    <div><strong>Email ID:</strong> ${data.id}</div>
+                    <div class="mt-1"><strong>To:</strong> ${to}</div>
+                    <div class="mt-1"><strong>From:</strong> ${from}</div>
+                  </div>
+                </div>
+              `;
+              
+            } catch (error) {
+              // 8. Show failure message with actionable guidance
+              let errorMsg = error.message;
+              
+              console.error('Send error:', error);
+              
+              // Provide context-specific help
+              if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+                errorMsg += ' → Check your API key at https://resend.com/api-keys';
+              } else if (errorMsg.includes('invalid_from_address') || errorMsg.includes('from')) {
+                errorMsg += ' → "From" email must be verified in your Resend account';
+              } else if (errorMsg.includes('invalid_to_address') || errorMsg.includes('to')) {
+                errorMsg += ' → "To" email address is invalid';
+              } else if (errorMsg.includes('missing_required_parameters')) {
+                errorMsg += ' → All fields are required (Subject, To, From, Body)';
+              }
+              
+              messageContainer.innerHTML = `
+                <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
+                  <span class="font-medium">❌ Send Failed:</span>
+                  <div class="mt-1 text-xs">${errorMsg}</div>
+                  <div class="mt-2 text-xs text-gray-600">Debug: Check the browser console (F12) for more details.</div>
+                </div>
+              `;
+            } finally {
+              // 9. Reset button state
+              sendBtn.disabled = false;
+              sendBtn.textContent = 'Send Email';
+            }
+          });
+        } else {
+          console.error('Form element not found');
+        }
+      });
+    </script>
+    
+    <!-- FOOTER -->
+    <div class="mt-12 pt-8 pb-4 border-t border-gray-200 text-center text-xs text-gray-500">
       Made by 
       <a href="mailto:rozetyp@gmail.com" class="text-blue-600 hover:underline">rozetyp</a>
       · 
-      <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">GitHub</a>
+      <a href="https://buymeacoffee.com/sandbar" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">☕ Buy Me a Coffee</a>
       · 
-      <a href="https://buymeacoffee.com/sandbar" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">Buy Me a Coffee</a>
-    </p>
-    <p class="mt-3 text-gray-500">Not affiliated with or endorsed by Resend, Inc.</p>
-  </div>
-
-  <!-- ============ SCRIPTS ============ -->
-  <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.js"></script>
-  <script>
-    // ============ ENVIRONMENT SETUP ============
-    const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      ? 'http://localhost:3001'
-      : `https://${window.location.host}`;
-
-    console.log('Environment:', API_URL);
-
-    // ============ PELL EDITOR INITIALIZATION ============
-    const pellEditorConfig = {
-      element: document.getElementById('pell'),
-      onChange: (html) => {
-        document.getElementById('body_textarea').value = html;
-        console.log('Pell content updated:', html.substring(0, 50) + '...');
-      }
-    };
-
-    try {
-      pell.init(pellEditorConfig);
-      console.log('Pell editor initialized successfully');
-    } catch (error) {
-      console.error('Failed to initialize Pell editor:', error);
-    }
-
-    // ============ DOMAIN LOADING ============
-    document.getElementById('load_domains_btn')?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const apiKey = document.getElementById('api_key').value;
-      const messageContainer = document.getElementById('messageContainer');
-
-      if (!apiKey.trim()) {
-        messageContainer.innerHTML = '<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50">Please enter your API key first.</div>';
-        return;
-      }
-
-      try {
-        console.log('Fetching domains...');
-        const response = await fetch(`${API_URL}/api/domains`, {
-          headers: { 'Authorization': `Bearer ${apiKey}` }
-        });
-
-        const data = await response.json();
-        console.log('Domains response:', data);
-
-        if (!response.ok) {
-          throw new Error(data.message || 'Failed to load domains');
-        }
-
-        if (data.data && data.data.length > 0) {
-          const domains = data.data.map(d => d.name).join(', ');
-          messageContainer.innerHTML = `<div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50">✓ Domains loaded: <strong>${domains}</strong></div>`;
-          document.getElementById('from').placeholder = data.data[0].name;
-        } else {
-          messageContainer.innerHTML = '<div class="p-4 mb-4 text-sm text-yellow-800 rounded-lg bg-yellow-50">No verified domains found. <a href="https://resend.com/domains" class="underline">Add one in Resend</a>.</div>';
-        }
-      } catch (error) {
-        console.error('Domain fetch error:', error);
-        messageContainer.innerHTML = `<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50"><strong>Error:</strong> ${error.message}</div>`;
-      }
-    });
-
-    // ============ PREVIEW FUNCTIONALITY ============
-    document.getElementById('preview_btn')?.addEventListener('click', (e) => {
-      e.preventDefault();
-      const body = document.getElementById('body_textarea').value;
-      document.getElementById('preview_content').innerHTML = body || '<p class="text-gray-500">No content yet.</p>';
-      document.getElementById('preview_modal').style.display = 'flex';
-    });
-
-    document.getElementById('preview_close_btn')?.addEventListener('click', () => {
-      document.getElementById('preview_modal').style.display = 'none';
-    });
-
-    // ============ FORM SUBMISSION ============
-    const form = document.getElementById('send_form');
-    form?.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      const apiKey = document.getElementById('api_key').value.trim();
-      const from = document.getElementById('from').value.trim();
-      const to = document.getElementById('to').value.trim();
-      const subject = document.getElementById('subject').value.trim();
-      const body = document.getElementById('body_textarea').value.trim();
-      const messageContainer = document.getElementById('messageContainer');
-      const sendBtn = document.getElementById('send_btn');
-
-      if (!apiKey || !from || !to || !subject || !body) {
-        messageContainer.innerHTML = '<div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50">All fields are required.</div>';
-        return;
-      }
-
-      sendBtn.disabled = true;
-      sendBtn.textContent = 'Sending...';
-
-      try {
-        const payload = { from, to: [to], subject, html: body };
-        console.log('Sending to Resend API...', payload);
-
-        const response = await fetch(`${API_URL}/api/send`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(payload)
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          const errorMsg = data.message || 'An unknown error occurred.';
-          throw new Error(`API Error (${data.name}): ${errorMsg}`);
-        }
-
-        messageContainer.innerHTML = `
-          <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50">
-            <span class="font-medium">✓ Email Sent Successfully!</span>
-            <div class="mt-2 p-3 bg-green-100 rounded font-mono text-xs">
-              <div><strong>Email ID:</strong> ${data.id}</div>
-              <div class="mt-1"><strong>To:</strong> ${to}</div>
-            </div>
-          </div>
-        `;
-      } catch (error) {
-        let errorMsg = error.message;
-        if (errorMsg.includes('401')) errorMsg += ' → Check your API key at <a href="https://resend.com/api-keys" class="underline">resend.com/api-keys</a>';
-        if (errorMsg.includes('from')) errorMsg += ' → "From" must be verified in Resend';
-
-        messageContainer.innerHTML = `
-          <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50">
-            <span class="font-medium">❌ Send Failed:</span>
-            <div class="mt-1 text-xs">${errorMsg}</div>
-            <div class="mt-2 text-xs text-gray-600">Debug: Check F12 console for details.</div>
-          </div>
-        `;
-      } finally {
-        sendBtn.disabled = false;
-        sendBtn.textContent = 'Send Email';
-      }
-    });
-  </script>
-</body>
-</html>
+      <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">GitHub</a>
+    </div>
