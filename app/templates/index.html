@@ -2,11 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Resend BYOK - Send Emails Without Vendor Lock-in</title>
+  <title>Resend Pad - Send Emails with Your API Key</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Bring your own Resend API key. Simple, transparent email sending. Your key stays in your browser. No vendor lock-in, no complicated setup." />
-  <meta property="og:title" content="Resend BYOK - Email Without Lock-in" />
-  <meta property="og:description" content="Paste your Resend API key. Compose with WYSIWYG. Send instantly. Full control, zero hassle." />
+  <meta name="description" content="Simple email composer for Resend. Paste your API key, write your email, send instantly. No accounts, no setup. Just your key." />
+  <meta property="og:title" content="Resend Pad - Simple Email Sending" />
+  <meta property="og:description" content="Compose and send emails with your Resend API key instantly. Open source. No setup required." />
   <meta property="og:type" content="website" />
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
   
@@ -507,7 +507,7 @@
   <!-- ============ NAVIGATION ============ -->
   <header>
     <nav>
-      <div class="logo">Resend BYOK</div>
+      <div class="logo">Resend Pad</div>
       <ul class="nav-links">
         <li><a href="#how-it-works">How It Works</a></li>
         <li><a href="https://github.com/rozetyp/resend-email" target="_blank">GitHub</a></li>
@@ -522,9 +522,9 @@
   <section class="hero">
     <div class="container">
       <div class="hero-content">
-        <h1>Send one-off emails with Resend — no code needed</h1>
+        <h1>Send emails with Resend, instantly</h1>
         <p class="subtitle">
-          Paste your API key, compose with a rich editor, send instantly. Perfect for tests, transactional emails, and quick sends from your domain. Your key stays secure and never gets stored.
+          Paste your Resend API key. Compose with a rich editor. Send instantly. Your key is secure, never logged. Perfect for tests, quick emails, and transactional sends.
         </p>
         <div class="hero-actions">
           <a href="#send-email" class="btn btn-primary">Start Sending Now</a>
@@ -645,13 +645,24 @@
           <!-- ERROR/SUCCESS ALERTS -->
           {% if error %}
           <div class="alert alert-error" style="margin-top: 1.5rem;">
-            ❌ {{ error }}
+            <strong>❌ Send Failed</strong>
+            <div style="margin-top: 0.5rem; font-size: 0.9rem;">{{ error }}</div>
+            <div style="margin-top: 0.5rem; font-size: 0.85rem; opacity: 0.8;">Check your API key, domain verification, and recipient email.</div>
           </div>
           {% endif %}
           
           {% if result %}
           <div class="alert alert-success" style="margin-top: 1.5rem;">
-            ✓ Email sent! Email ID: <code style="background: rgba(0,0,0,0.1); padding: 0.2rem 0.4rem; border-radius: 3px;">{{ result.id }}</code>
+            <strong>✓ Email Sent Successfully!</strong>
+            <div style="margin-top: 0.75rem; padding: 0.75rem; background: rgba(255,255,255,0.3); border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.85rem;">
+              <div><strong>Email ID:</strong> {{ result.id }}</div>
+              <div style="margin-top: 0.25rem;"><strong>To:</strong> {{ last_to }}</div>
+              <div style="margin-top: 0.25rem;"><strong>From:</strong> {{ last_from }}</div>
+            </div>
+            <div style="margin-top: 0.75rem; font-size: 0.9rem;">
+              <div>✓ Email queued for delivery via Resend</div>
+              <div style="margin-top: 0.25rem;">✓ Track status in your Resend dashboard</div>
+            </div>
           </div>
           {% endif %}
 
@@ -711,7 +722,7 @@
           Open source. No tracking. No cookies. No hidden fees. <strong>Just code.</strong>
         </p>
         <p style="margin-top: 1rem; font-size: 0.8rem; color: rgba(255, 255, 255, 0.5);">
-          © 2025 Resend BYOK. Built with Resend API.
+          © 2025 Resend Pad. Built with Resend API. Open source.
         </p>
       </div>
     </div>

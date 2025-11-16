@@ -236,6 +236,7 @@ async def send_email(
             "domains": domains,
             "domains_error": DOMAINS_CACHE.get("error"),
             "last_to": to_email,
+            "last_from": from_email,
             "last_subject": subject,
             "last_body": body,
             "error": error,
