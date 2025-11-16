@@ -66,7 +66,7 @@
     
     <div class="w-full max-w-3xl bg-white text-gray-900 rounded-xl shadow-2xl p-6 sm:p-8">
       
-      <div class="flex items-center justify-center mb-6 gap-3">
+      <div class="flex items-center justify-center mb-2 gap-3">
         <h1 class="text-3xl font-bold text-center text-gray-900">
           Resend Pad
         </h1>
@@ -76,6 +76,10 @@
           </svg>
         </a>
       </div>
+      
+      <p class="text-center text-sm text-gray-600 mb-6">
+        Send emails with Resend using your own API key. No server relay. Built for developers.
+      </p>
       
       <div class="form-container">
         <form id="send_form">
@@ -470,7 +474,18 @@
         } else {
           console.error('Form element not found');
         }
-    });
-  </script>
-</body>
-</html>
+      });
+    </script>
+    
+    <!-- FOOTER -->
+    <div class="mt-8 pt-6 border-t border-gray-200 text-center text-xs text-gray-500 space-y-2">
+      <p>
+        Built with ❤️ by 
+        <a href="mailto:anton.a.zaytsev@gmail.com" class="text-blue-600 hover:underline">Anton</a>
+      </p>
+      <p class="flex justify-center gap-3">
+        <a href="https://buymeacoffee.com/sandbar" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">☕ Buy Me a Coffee</a>
+        <span>·</span>
+        <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">GitHub</a>
+      </p>
+    </div>
