@@ -437,23 +437,18 @@
                 </div>
               `;
               
-              // 7a. Auto-clear form and message after 2 seconds
+              // 7a. Reset form silently after 500ms (keep success message visible)
               setTimeout(() => {
-                console.log('Auto-clearing form...');
                 form.reset();
                 
                 // Clear hidden body field
                 const bodyField = document.getElementById('body');
                 if (bodyField) bodyField.value = '';
                 
-                // Clear Pell editor
-                const pellContent = document.getElementById('pell');
+                // Clear Pell editor content (not the container)
+                const pellContent = document.querySelector('.pell-content');
                 if (pellContent) pellContent.innerHTML = '';
-                
-                // Clear message
-                messageContainer.innerHTML = '';
-                console.log('Form cleared');
-              }, 2000);
+              }, 500);
               
             } catch (error) {
               // 8. Show failure message with actionable guidance
