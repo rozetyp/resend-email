@@ -225,7 +225,8 @@
           hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
           hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
           hdr += '</div>';
-          previewContent.innerHTML = hdr + (pellEditor.content.innerHTML || '<i>(empty)</i>');
+          const bodyContent = (pellEditor && pellEditor.content) ? pellEditor.content.innerHTML : document.getElementById('body').value;
+          previewContent.innerHTML = hdr + (bodyContent || '<i>(empty)</i>');
         }
 
         // preview from the Send area
