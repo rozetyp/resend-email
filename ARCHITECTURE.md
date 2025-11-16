@@ -10,16 +10,18 @@
 
 ### ✅ What It Does
 
-1. **Frontend** (index.html) - User interface for composing emails
-   - Accepts Resend API Key from user (password field)
-   - Fetches verified domains from Resend API (via proxy)
-   - Provides rich text editor (Pell)
-   - Sends emails via proxy endpoint
+1. **Frontend** (Two pages)
+   - **landing.html** - SEO-optimized landing page for organic traffic
+   - **index.html** - User interface for composing and sending emails
+     - Accepts Resend API Key from user (password field)
+     - Fetches verified domains from Resend API (via proxy)
+     - Provides rich text editor (Pell)
+     - Sends emails via proxy endpoint
 
 2. **Backend** (api-proxy.js) - CORS proxy server
    - Proxies requests to Resend API
    - Handles CORS transparently
-   - Serves static files (index.html)
+   - Serves static files (index.html, landing.html, sitemap.xml, robots.txt)
    - Logs request metadata for debugging
 
 ### ❌ What It Does NOT Do
@@ -39,7 +41,14 @@
 │                                                  │
 │  Frontend                                        │
 │  ┌────────────────────────────────────────────┐  │
-│  │ index.html (Single HTML file)              │  │
+│  │ landing.html (SEO Landing Page)            │  │
+│  │ - HTML5 + Tailwind CSS                     │  │
+│  │ - Schema.org JSON-LD markup                │  │
+│  │ - Drive organic traffic                    │  │
+│  └────────────────────────────────────────────┘  │
+│                                                  │
+│  ┌────────────────────────────────────────────┐  │
+│  │ index.html (Email Editor)                  │  │
 │  │ - HTML5 + Vanilla JS + Tailwind CSS        │  │
 │  │ - Pell rich text editor                    │  │
 │  │ - Form handling & validation               │  │
@@ -53,7 +62,7 @@
 │  │ api-proxy.js (Node.js)                     │  │
 │  │ - Simple HTTP server                       │  │
 │  │ - Routes /api/* to Resend                  │  │
-│  │ - Serves static files (index.html)         │  │
+│  │ - Serves static files (HTML, sitemap.xml) │  │
 │  │ - CORS handling                            │  │
 │  │ - Request logging                          │  │
 │  └────────────────────────────────────────────┘  │
@@ -228,8 +237,12 @@ node api-proxy.js  # Starts on http://localhost:3001
 ```bash
 # api-proxy.js runs on PORT (default 8080)
 # Automatically detects production domain
-# API URL: https://resendpad.up.railway.app
-# index.html served from root /
+# Serves both pages:
+#   - https://resendpad.up.railway.app/landing.html (SEO landing)
+#   - https://resendpad.up.railway.app/index.html (Email editor)
+# Also serves:
+#   - sitemap.xml (for search engines)
+#   - robots.txt (crawler directives)
 ```
 
 ### Environment Detection

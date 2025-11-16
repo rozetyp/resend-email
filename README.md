@@ -16,7 +16,8 @@ A minimal email utility to send emails using your Resend API key.
 
 ### Online (Railway Deployment)
 ```
-https://resendpad.up.railway.app
+Landing Page:  https://resendpad.up.railway.app/landing.html
+Email Editor:  https://resendpad.up.railway.app/index.html
 ```
 
 ### Local Development
@@ -24,9 +25,10 @@ https://resendpad.up.railway.app
 # Terminal 1: Start the API proxy
 node api-proxy.js
 
-# Terminal 2: Open the app
-# Visit http://localhost:9000/index.html
-# Or just open index.html directly in browser
+# Terminal 2: Open the app in browser
+# Landing page: http://localhost:3001/landing.html
+# Email editor: http://localhost:3001/index.html
+# Or open index.html directly (auto-detects localhost:3001)
 ```
 
 ## How It Works
@@ -41,10 +43,11 @@ node api-proxy.js
 
 - **WYSIWYG Editor**: Rich text formatting with Pell
 - **Domain Loader**: Fetch verified domains from your Resend account
-- **Email Preview**: See exactly how your email will look
 - **Batch Sending**: Keep form filled, just change recipient
 - **Error Handling**: Clear error messages from Resend API
 - **Responsive**: Works on desktop, tablet, and mobile
+- **SEO Landing Page**: Dedicated landing page for organic traffic
+- **BYOK Model**: Bring Your Own Key – no accounts required
 
 ## Security
 
@@ -90,7 +93,10 @@ railway up
 
 **How it works:**
 - Railway runs `node api-proxy.js` on the default PORT
-- Frontend served from `index.html` at root `/`
+- Frontend files served from root `/`:
+  - `index.html` (email editor)
+  - `landing.html` (SEO landing page)
+  - `sitemap.xml` and `robots.txt` (SEO metadata)
 - API calls proxied through `/api/*` endpoints
 - Auto-detects production domain and routes accordingly
 
@@ -124,12 +130,15 @@ cd resend-email
 - HTML5 + Vanilla JavaScript (no frameworks)
 - Tailwind CSS (CDN) for styling
 - Pell for rich text editing
+- SEO-optimized landing page
+- Favicon (inline SVG)
 
 **Backend:**
 - Node.js + native HTTP server
 - Proxies requests to Resend API
-- Serves static files (index.html, CSS, etc.)
+- Serves static files (index.html, landing.html, sitemap.xml, robots.txt)
 - Handles CORS automatically
+- Auto-detects environment (localhost vs. production)
 
 ## How the Proxy Works
 
