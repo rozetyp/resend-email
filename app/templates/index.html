@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Resend BYOK Mailer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -20,8 +21,7 @@
       box-shadow: 0 10px 30px rgba(0,0,0,0.06);
     }
     label { display:block; font-size:0.9rem; margin-bottom:0.25rem; font-weight:600; }
-    input, textarea { width:100%; box-sizing:border-box; padding:0.5rem 0.75rem; border-radius:8px; border:1px solid #d0d0d5; margin-bottom:0.75rem; font:inherit; }
-    textarea { min-height:180px; resize:vertical; }
+    input { width:100%; box-sizing:border-box; padding:0.5rem 0.75rem; border-radius:8px; border:1px solid #d0d0d5; margin-bottom:0.75rem; font:inherit; }
     button { padding:0.6rem 1.4rem; border-radius:999px; border:none; font-weight:600; cursor:pointer; background:#2563eb; color:white; }
     .title { font-size:1.4rem; font-weight:700; margin-bottom:1rem; }
     .subtitle { font-size:0.9rem; color:#555; margin-bottom:1.25rem; }
@@ -29,6 +29,8 @@
     .alert-error { background:#fee2e2; color:#b91c1c; border:1px solid #fecaca; }
     .alert-success { background:#dcfce7; color:#166534; border:1px solid #bbf7d0; }
     .meta { font-size:0.8rem; color:#777; margin-bottom:0.75rem; }
+    .pell { border: 1px solid #d0d0d5; border-radius: 8px; min-height: 180px; margin-bottom: 0.75rem; }
+    .pell-content { outline: none; padding: 0.5rem 0.75rem; min-height: 150px; }
   </style>
 </head>
 <body>
@@ -92,18 +94,8 @@
 
       <label for="body">Body (HTML allowed)</label>
 
-      <div style="display:flex;gap:.5rem;margin-bottom:.5rem;align-items:center;">
-        <div>
-          <button type="button" data-cmd="bold">Bold</button>
-          <button type="button" data-cmd="italic">Italic</button>
-          <button type="button" data-cmd="link">Link</button>
-          <button type="button" data-cmd="p">Paragraph</button>
-          <button type="button" data-cmd="clear">Clear</button>
-          <button type="button" id="preview_btn">Preview</button>
-        </div>
-      </div>
-
-      <textarea id="body" name="body" placeholder="<p>Hello from Resend BYOK UI!</p>" required>{{ last_body or '' }}</textarea>
+      <div id="pell" class="pell" style="margin-bottom:0.75rem;"></div>
+      <input type="hidden" id="body" name="body" value="{{ last_body or '' }}" />
 
       <div id="preview" style="display:none;border:1px solid #e5e7eb;padding:1rem;border-radius:8px;margin-top:.5rem;background:#fff;">
         <div style="font-weight:700;margin-bottom:.5rem;">Preview</div>
@@ -115,14 +107,39 @@
         <button type="submit">Send email</button>
       </div>
     </form>
+    <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
     <script>
       (function(){
+        // Initialize Pell editor
+        const pellEditor = window.pell.init({
+          element: document.getElementById('pell'),
+          onChange: function(html) {
+            document.getElementById('body').value = html;
+          },
+          defaultParagraphSeparator: 'p',
+          actions: [
+            'bold',
+            'italic',
+            'underline',
+            'heading1',
+            'heading2',
+            'olist',
+            'ulist',
+            { name: 'link', result: () => { const url = prompt('Enter URL'); if(url) window.pell.exec('createLink', url); } },
+            { name: 'code', result: () => window.pell.exec('formatBlock', '<pre>') }
+          ]
+        });
+
+        // Pre-populate editor if there's saved content
+        if(document.getElementById('body').value){
+          pellEditor.content.innerHTML = document.getElementById('body').value;
+        }
+
         const sel = document.getElementById('domain_select');
         const from = document.getElementById('from_email');
         const lock = document.getElementById('lock_from');
         const chips = document.querySelectorAll('.domain-chip');
-        const body = document.getElementById('body');
-        const previewBtn = document.getElementById('preview_btn');
         const preview = document.getElementById('preview');
         const previewContent = document.getElementById('preview_content');
 
@@ -188,86 +205,46 @@
           }
         }));
 
-        // toolbar actions for body textarea
-        function wrapSelection(before, after){
-          const ta = body;
-          const start = ta.selectionStart || 0;
-          const end = ta.selectionEnd || 0;
-          const selected = ta.value.substring(start,end);
-          const newVal = ta.value.substring(0,start) + before + selected + after + ta.value.substring(end);
-          ta.value = newVal;
-          ta.focus();
-          ta.selectionStart = start + before.length;
-          ta.selectionEnd = start + before.length + selected.length;
+        function renderPreview(){
+          const subjectEl = document.getElementById('subject');
+          const toEl = document.getElementById('to_email');
+          const fromEl = document.getElementById('from_email');
+          const subj = subjectEl ? subjectEl.value : '';
+          const to = toEl ? toEl.value : '';
+          const fr = fromEl ? fromEl.value : '';
+          let hdr = '<div style="margin-bottom:.75rem;padding:.5rem;border-radius:6px;background:#f8fafc;border:1px solid #e6eef8;">';
+          hdr += '<div style="font-weight:700;margin-bottom:.25rem;">' + (subj||'(no subject)') + '</div>';
+          hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
+          hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
+          hdr += '</div>';
+          previewContent.innerHTML = hdr + (pellEditor.content.innerHTML || '<i>(empty)</i>');
         }
-
-        document.querySelectorAll('[data-cmd]').forEach(btn => {
-          btn.addEventListener('click', function(){
-            const cmd = this.getAttribute('data-cmd');
-            if(!body) return;
-            if(cmd==='bold') wrapSelection('<strong>','</strong>');
-            if(cmd==='italic') wrapSelection('<em>','</em>');
-            if(cmd==='p') wrapSelection('<p>','</p>');
-            if(cmd==='clear') { body.value = ''; preview.style.display='none'; }
-            if(cmd==='link'){
-              const url = prompt('Enter URL (https://...)');
-              if(url) wrapSelection('<a href="'+url+'">','</a>');
-            }
-          });
-        });
-
-        previewBtn && previewBtn.addEventListener('click', function(){
-          if(!preview) return;
-          if(preview.style.display==='none'){
-              // include header preview (From/To/Subject) + body
-              const subjectEl = document.getElementById('subject');
-              const toEl = document.getElementById('to_email');
-              const fromEl = document.getElementById('from_email');
-              const subj = subjectEl ? subjectEl.value : '';
-              const to = toEl ? toEl.value : '';
-              const fr = fromEl ? fromEl.value : '';
-              let hdr = '<div style="margin-bottom:.75rem;padding:.5rem;border-radius:6px;background:#f8fafc;border:1px solid #e6eef8;">';
-              hdr += '<div style="font-weight:700;margin-bottom:.25rem;">' + (subj||'(no subject)') + '</div>';
-              hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
-              hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
-              hdr += '</div>';
-              previewContent.innerHTML = hdr + (body.value || '<i>(empty)</i>');
-            preview.style.display = 'block';
-            this.textContent = 'Hide preview';
-          } else {
-            preview.style.display = 'none';
-            this.textContent = 'Preview';
-          }
-        });
 
         // preview from the Send area
         const sendPreviewBtn = document.getElementById('send_preview_btn');
         sendPreviewBtn && sendPreviewBtn.addEventListener('click', function(e){
           e.preventDefault();
           if(!preview) return;
-          // reuse same logic as toolbar preview
           if(preview.style.display==='none'){
-            const subjectEl = document.getElementById('subject');
-            const toEl = document.getElementById('to_email');
-            const fromEl = document.getElementById('from_email');
-            const subj = subjectEl ? subjectEl.value : '';
-            const to = toEl ? toEl.value : '';
-            const fr = fromEl ? fromEl.value : '';
-            let hdr = '<div style="margin-bottom:.75rem;padding:.5rem;border-radius:6px;background:#f8fafc;border:1px solid #e6eef8;">';
-            hdr += '<div style="font-weight:700;margin-bottom:.25rem;">' + (subj||'(no subject)') + '</div>';
-            hdr += '<div style="font-size:.9rem;color:#333">From: ' + (fr||'(no from)') + '</div>';
-            hdr += '<div style="font-size:.9rem;color:#333">To: ' + (to||'(no to)') + '</div>';
-            hdr += '</div>';
-            previewContent.innerHTML = hdr + (body.value || '<i>(empty)</i>');
+            renderPreview();
             preview.style.display = 'block';
             preview.scrollIntoView({behavior:'smooth', block:'center'});
-            // update toolbar preview button label if present
-            if(previewBtn) previewBtn.textContent = 'Hide preview';
           } else {
             preview.style.display = 'none';
-            if(previewBtn) previewBtn.textContent = 'Preview';
           }
         });
+
+        // Ensure body hidden input is synced before submit
+        const form = document.querySelector('form');
+        if(form){
+          form.addEventListener('submit', function(e){
+            document.getElementById('body').value = pellEditor.content.innerHTML;
+            if(!pellEditor.content.innerHTML.trim()){
+              e.preventDefault();
+              alert('Body cannot be empty');
+            }
+          });
+        }
 
         initDomain();
       })();
