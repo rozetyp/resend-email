@@ -437,12 +437,15 @@
                 </div>
               `;
               
-              // 7a. Reset form for next email
-              form.reset();
-              document.getElementById('body').value = '';
-              if (window.pell && window.pell.content) {
-                window.pell.content.innerHTML = '';
-              }
+              // 7a. Auto-clear form and message after 2 seconds
+              setTimeout(() => {
+                form.reset();
+                document.getElementById('body').value = '';
+                if (window.pell && window.pell.content) {
+                  window.pell.content.innerHTML = '';
+                }
+                messageContainer.innerHTML = '';
+              }, 2000);
               
             } catch (error) {
               // 8. Show failure message with actionable guidance
