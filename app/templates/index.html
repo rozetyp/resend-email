@@ -133,6 +133,24 @@
           ]
         });
 
+        // Apply black styling to toolbar buttons
+        setTimeout(function() {
+          const buttons = document.querySelectorAll('.pell-toolbar button');
+          buttons.forEach(btn => {
+            btn.style.backgroundColor = '#000';
+            btn.style.color = '#fff';
+            btn.style.padding = '0.4rem 0.8rem';
+            btn.style.borderRadius = '4px';
+            btn.style.border = 'none';
+            btn.style.fontSize = '0.85rem';
+            btn.style.fontWeight = '600';
+            btn.style.cursor = 'pointer';
+            btn.style.marginRight = '0.25rem';
+            btn.addEventListener('mouseenter', () => btn.style.backgroundColor = '#333');
+            btn.addEventListener('mouseleave', () => btn.style.backgroundColor = '#000');
+          });
+        }, 100);
+
         // Pre-populate editor if there's saved content
         if(document.getElementById('body').value){
           pellEditor.content.innerHTML = document.getElementById('body').value;
