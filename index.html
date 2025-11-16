@@ -86,13 +86,7 @@
           
           <!-- API KEY INPUT -->
           <div class="mb-5">
-            <label for="api_key" class="block mb-2 text-sm font-medium text-gray-900">
-              Your Resend API Key
-              <span class="relative inline-block ml-1 text-gray-400 cursor-help group">
-                <span class="text-xs">?</span>
-                <span class="invisible group-hover:visible absolute left-0 bottom-full mb-2 w-48 p-2 text-xs text-white bg-gray-900 rounded z-10 whitespace-normal">Your key stays in your browser. Never stored or logged.</span>
-              </span>
-            </label>
+            <label for="api_key" class="block mb-2 text-sm font-medium text-gray-900">Your Resend API Key</label>
             <input 
               type="password" 
               id="api_key" 
@@ -101,6 +95,7 @@
               style="font-family: 'Courier New', monospace;"
               required
             />
+            <p class="mt-1 text-xs text-gray-500">Stays in your browser. Never stored.</p>
             <div class="p-3 mt-3 text-xs text-blue-800 rounded-lg bg-blue-50" role="alert">
               Tip: Need "Full Access" key to list domains. <a href="https://resend.com/api-keys" target="_blank" class="underline hover:no-underline">Get one →</a>
             </div>
@@ -108,13 +103,7 @@
 
           <!-- FROM EMAIL -->
           <div class="mb-5">
-            <label for="from_email" class="block mb-2 text-sm font-medium text-gray-900">
-              From Email
-              <span class="relative inline-block ml-1 text-gray-400 cursor-help group">
-                <span class="text-xs">?</span>
-                <span class="invisible group-hover:visible absolute left-0 bottom-full mb-2 w-48 p-2 text-xs text-white bg-gray-900 rounded z-10 whitespace-normal">Must be verified in your Resend account.</span>
-              </span>
-            </label>
+            <label for="from_email" class="block mb-2 text-sm font-medium text-gray-900">From Email</label>
             <div class="flex flex-col sm:flex-row gap-2">
               <input 
                 id="from_email" 
@@ -128,18 +117,12 @@
                 Load Domains
               </button>
             </div>
-            <div id="domains_list" class="hidden mt-3 p-3 text-sm text-blue-800 rounded-lg bg-blue-50"></div>
+            <p class="mt-1 text-xs text-gray-500">Must be verified in your Resend account.</p>
           </div>
 
           <!-- TO EMAIL -->
           <div class="mb-5">
-            <label for="to_email" class="block mb-2 text-sm font-medium text-gray-900">
-              To Email
-              <span class="relative inline-block ml-1 text-gray-400 cursor-help group">
-                <span class="text-xs">?</span>
-                <span class="invisible group-hover:visible absolute left-0 bottom-full mb-2 w-48 p-2 text-xs text-white bg-gray-900 rounded z-10 whitespace-normal">Recipient email address.</span>
-              </span>
-            </label>
+            <label for="to_email" class="block mb-2 text-sm font-medium text-gray-900">To Email</label>
             <input 
               id="to_email" 
               name="to_email" 
@@ -148,6 +131,7 @@
               placeholder="recipient@example.com" 
               required 
             />
+            <p class="mt-1 text-xs text-gray-500">Recipient email address.</p>
           </div>
 
           <!-- SUBJECT -->
