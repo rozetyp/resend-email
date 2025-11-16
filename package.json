@@ -1,0 +1,13 @@
+{
+  "name": "resend-pad",
+  "version": "1.0.0",
+  "description": "Minimal email utility with Resend API",
+  "main": "api-proxy.js",
+  "scripts": {
+    "start": "node api-proxy.js",
+    "dev": "node api-proxy.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
