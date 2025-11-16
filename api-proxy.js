@@ -12,6 +12,8 @@ const PORT = process.env.PORT || 3001;
 const API_URL = process.env.API_URL || 'http://localhost:3001';
 
 const server = http.createServer((req, res) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+  
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
@@ -19,6 +21,7 @@ const server = http.createServer((req, res) => {
 
   // Handle preflight
   if (req.method === 'OPTIONS') {
+    console.log('[PREFLIGHT] Responding to OPTIONS request');
     res.writeHead(200);
     res.end();
     return;
@@ -41,6 +44,7 @@ const server = http.createServer((req, res) => {
     const baseDir = path.resolve(__dirname);
     
     if (!realPath.startsWith(baseDir)) {
+      console.log('[SECURITY] Directory traversal attempt blocked:', req.url);
       res.writeHead(403, { 'Content-Type': 'text/plain' });
       res.end('Forbidden');
       return;
@@ -48,6 +52,7 @@ const server = http.createServer((req, res) => {
     
     fs.readFile(filePath, (err, data) => {
       if (err) {
+        console.log('[404] File not found:', filePath);
         res.writeHead(404, { 'Content-Type': 'text/plain' });
         res.end('404 Not Found');
         return;
@@ -60,6 +65,7 @@ const server = http.createServer((req, res) => {
       else if (filePath.endsWith('.js')) contentType = 'application/javascript';
       else if (filePath.endsWith('.json')) contentType = 'application/json';
       
+      console.log('[SERVE] Serving file:', filePath, 'as', contentType);
       res.writeHead(200, { 'Content-Type': contentType });
       res.end(data);
     });
@@ -78,7 +84,12 @@ function handleSendEmail(req, res) {
       const data = JSON.parse(body);
       const apiKey = req.headers.authorization?.replace('Bearer ', '');
       
+      console.log('[SEND] Request received');
+      console.log('[SEND] API Key present:', !!apiKey);
+      console.log('[SEND] Payload:', JSON.stringify(data));
+      
       if (!apiKey) {
+        console.log('[SEND] ERROR: Missing API key');
         res.writeHead(401);
         res.end(JSON.stringify({ error: 'Missing API key' }));
         return;
@@ -96,14 +107,19 @@ function handleSendEmail(req, res) {
         }
       };
       
+      console.log('[SEND] Forwarding to Resend API...');
+      
       const resendReq = https.request(options, (resendRes) => {
         let responseBody = '';
+        
+        console.log('[SEND] Resend response status:', resendRes.statusCode);
         
         resendRes.on('data', chunk => {
           responseBody += chunk;
         });
         
         resendRes.on('end', () => {
+          console.log('[SEND] Resend response body:', responseBody);
           res.writeHead(resendRes.statusCode, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
@@ -113,16 +129,16 @@ function handleSendEmail(req, res) {
       });
       
       resendReq.on('error', (error) => {
-        console.error('Resend API error:', error);
+        console.error('[SEND] ERROR: Resend request failed:', error.message);
         res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to contact Resend API' }));
+        res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
       });
       
       resendReq.write(body);
       resendReq.end();
       
     } catch (error) {
-      console.error('Parse error:', error);
+      console.error('[SEND] Parse error:', error.message);
       res.writeHead(400);
       res.end(JSON.stringify({ error: 'Invalid JSON' }));
     }
@@ -132,7 +148,11 @@ function handleSendEmail(req, res) {
 function handleGetDomains(req, res) {
   const apiKey = req.headers.authorization?.replace('Bearer ', '');
   
+  console.log('[DOMAINS] Request received');
+  console.log('[DOMAINS] API Key present:', !!apiKey);
+  
   if (!apiKey) {
+    console.log('[DOMAINS] ERROR: Missing API key');
     res.writeHead(401);
     res.end(JSON.stringify({ error: 'Missing API key' }));
     return;
@@ -147,14 +167,19 @@ function handleGetDomains(req, res) {
     }
   };
   
+  console.log('[DOMAINS] Forwarding to Resend API...');
+  
   const resendReq = https.request(options, (resendRes) => {
     let body = '';
+    
+    console.log('[DOMAINS] Resend response status:', resendRes.statusCode);
     
     resendRes.on('data', chunk => {
       body += chunk;
     });
     
     resendRes.on('end', () => {
+      console.log('[DOMAINS] Resend response body:', body);
       res.writeHead(resendRes.statusCode, {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'
@@ -164,9 +189,9 @@ function handleGetDomains(req, res) {
   });
   
   resendReq.on('error', (error) => {
-    console.error('Resend API error:', error);
+    console.error('[DOMAINS] ERROR: Resend request failed:', error.message);
     res.writeHead(500);
-    res.end(JSON.stringify({ error: 'Failed to contact Resend API' }));
+    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
   });
   
   resendReq.end();
