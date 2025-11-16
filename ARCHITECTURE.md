@@ -2,126 +2,181 @@
 
 ## Overview
 
-**Resend Pad** is a 100% client-side email utility. No backend. No server relay. Your API key stays in your browser.
+**Resend Pad** is a simple email utility with a lightweight Node.js proxy. 
+
+**Key principle:** API keys are passed through, never stored or logged.
 
 ## Design Principles
 
 ### ✅ What It Does
 
-1. **Accepts Resend API Key** from user (password field, visible only in browser)
-2. **Fetches Verified Domains** directly from Resend API (client-side)
-3. **Composes Email** with rich text editor (Pell)
-4. **Sends Email** directly from browser to `https://api.resend.com/emails`
-5. **Shows Result** with email ID or error message
+1. **Frontend** (index.html) - User interface for composing emails
+   - Accepts Resend API Key from user (password field)
+   - Fetches verified domains from Resend API (via proxy)
+   - Provides rich text editor (Pell)
+   - Sends emails via proxy endpoint
+
+2. **Backend** (api-proxy.js) - CORS proxy server
+   - Proxies requests to Resend API
+   - Handles CORS transparently
+   - Serves static files (index.html)
+   - Logs request metadata for debugging
 
 ### ❌ What It Does NOT Do
 
-- **Does NOT send API key to any server** (ours or third-party)
-- **Does NOT store data** (no databases, no caches, no logs)
-- **Does NOT track users** (no analytics, no cookies, no pixels)
-- **Does NOT require authentication** (no accounts, no signup)
-- **Does NOT persist data** (form clears on refresh)
+- **Does NOT store API keys** (used only in request headers)
+- **Does NOT store email content** (passed through only)
+- **Does NOT require user authentication** (no accounts needed)
+- **Does NOT track users** (no analytics, no cookies)
+- **Does NOT persist data** (stateless)
 
-## Technical Stack
+## Technical Architecture
 
 ```
-┌─────────────────────────────────────┐
-│         Resend Pad (index.html)     │
-│  ┌─────────────────────────────┐    │
-│  │   HTML5 + Vanilla JS + CSS  │    │
-│  │  (No frameworks, no build)  │    │
-│  └─────────────────────────────┘    │
-│              │                       │
-│              ├─→ Tailwind CSS (CDN)  │
-│              ├─→ Pell Editor (CDN)   │
-│              └─→ Resend API (CORS)   │
-│                                      │
-└─────────────────────────────────────┘
+┌──────────────────────────────────────────────────┐
+│              Resend Pad Application              │
+├──────────────────────────────────────────────────┤
+│                                                  │
+│  Frontend                                        │
+│  ┌────────────────────────────────────────────┐  │
+│  │ index.html (Single HTML file)              │  │
+│  │ - HTML5 + Vanilla JS + Tailwind CSS        │  │
+│  │ - Pell rich text editor                    │  │
+│  │ - Form handling & validation               │  │
+│  │ - Fetch API calls                          │  │
+│  └────────────────────────────────────────────┘  │
+│          │                                       │
+│          │ HTTP/HTTPS                           │
+│          ▼                                       │
+│  Backend                                         │
+│  ┌────────────────────────────────────────────┐  │
+│  │ api-proxy.js (Node.js)                     │  │
+│  │ - Simple HTTP server                       │  │
+│  │ - Routes /api/* to Resend                  │  │
+│  │ - Serves static files (index.html)         │  │
+│  │ - CORS handling                            │  │
+│  │ - Request logging                          │  │
+│  └────────────────────────────────────────────┘  │
+│          │                                       │
+│          │ HTTPS (with Bearer token)            │
+│          ▼                                       │
+└──────────────────────────────────────────────────┘
+                      │
+                      │ HTTPS
+                      ▼
+         ┌─────────────────────────┐
+         │   Resend API            │
+         │ api.resend.com/emails   │
+         │ api.resend.com/domains  │
+         └─────────────────────────┘
 ```
 
-### Dependencies
+## API Proxy Endpoints
 
-- **Tailwind CSS** (CDN) - Styling
-- **Pell** (CDN) - Rich text editor
-- **Fetch API** (native) - HTTP calls
-- **Nothing else** - No npm, no build step, no complexity
+### `POST /api/send`
+Sends an email via Resend API
 
-## API Calls (All Direct from Browser)
-
-### 1. Load Verified Domains
-
+**Request:**
 ```javascript
-fetch('https://api.resend.com/domains', {
-  method: 'GET',
-  headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
-  }
-})
+{
+  from: "sender@domain.com",
+  to: ["recipient@example.com"],
+  subject: "Email subject",
+  html: "<p>Email body HTML</p>"
+}
 ```
 
-**Flow:** User enters API key → clicks "Load Domains" → browser calls Resend API → shows domain list → user selects domain
+**Headers:**
+```
+Authorization: Bearer re_xxxxx
+Content-Type: application/json
+```
 
-**Security:** API key used only in this request, never stored
-
-### 2. Send Email
-
+**Response:**
 ```javascript
-fetch('https://api.resend.com/emails', {
-  method: 'POST',
-  headers: {
-    'Authorization': `Bearer ${apiKey}`,
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    from: userEmail,
-    to: [recipientEmail],
-    subject: userSubject,
-    html: userBody
-  })
-})
+{ id: "4477c96e-c260-4bb2-a316-7e57038fe54d" }
 ```
 
-**Flow:** User fills form → clicks "Send Email" → browser validates → calls Resend API → shows result with email ID
+### `GET /api/domains`
+Fetches user's verified domains
 
-**Security:** API key used only in this request, never sent to any other server
+**Headers:**
+```
+Authorization: Bearer re_xxxxx
+```
 
-## User Experience
+**Response:**
+```javascript
+{
+  data: [
+    { id: "1", name: "domain1.com", status: "verified" },
+    { id: "2", name: "domain2.com", status: "verified" }
+  ]
+}
+```
 
-### 1. Open Page
-- User opens `index.html` (from GitHub Pages, local file, or self-hosted URL)
-- Page loads instantly (single HTML file, ~19KB)
+### `GET /` (Root)
+Serves `index.html` - the frontend application
 
-### 2. Enter API Key
-- User pastes Resend API key into password field
-- Key stays in browser memory only
+## Data Flow
 
-### 3. Load Domains (Optional)
-- Click "Load Domains" button
-- Browser fetches verified domains from Resend API
-- Domains shown as clickable buttons
-- Click to auto-populate "From" field
+### 1. User Opens App
+```
+Browser → Server → Serves index.html
+```
 
-### 4. Fill Form
-- From: verified email address
-- To: recipient email
-- Subject: email subject
-- Body: rich text editor with formatting
+### 2. User Loads Domains
+```
+Browser                           
+  ├─ User enters API key
+  ├─ User clicks "Load Domains"
+  │
+  └─→ POST http://localhost:3001/api/domains
+      {Authorization: "Bearer re_xxxxx"}
+      
+      │→ api-proxy.js
+         ├─ Reads Authorization header
+         ├─ Logs request metadata
+         │
+         └─→ HTTPS https://api.resend.com/domains
+             {Authorization: "Bearer re_xxxxx"}
+             
+             ←─ Response: [domain list]
+        
+        ←─ Returns response to browser
+        
+  ←─ Browser displays domains
+```
 
-### 5. Preview (Optional)
-- Click "Preview" button
-- See formatted email in modal
-
-### 6. Send
-- Click "Send Email" button
-- Browser validates form
-- Calls Resend API directly
-- Shows success with email ID or error message
-
-### 7. Try Again
-- Form stays populated
-- Can modify and resend
-- Or reload page to clear
+### 3. User Sends Email
+```
+Browser
+  ├─ User fills form
+  ├─ User clicks "Send"
+  │
+  └─→ POST http://localhost:3001/api/send
+      {
+        from: "...",
+        to: ["..."],
+        subject: "...",
+        html: "..."
+      }
+      {Authorization: "Bearer re_xxxxx"}
+      
+      │→ api-proxy.js
+         ├─ Reads Authorization header
+         ├─ Logs request metadata (no email content)
+         │
+         └─→ HTTPS https://api.resend.com/emails
+             {Authorization: "Bearer re_xxxxx"}
+             [email data]
+             
+             ←─ Response: {id: "..."}
+        
+        ←─ Returns response to browser
+        
+  ←─ Browser shows success with email ID
+```
 
 ## Security Model
 
@@ -129,184 +184,136 @@ fetch('https://api.resend.com/emails', {
 
 | Stage | Location | Safety |
 |-------|----------|--------|
-| **Input** | Password field in browser | ✅ Only visible to user |
-| **Memory** | JavaScript variable | ✅ Lost when page closes |
-| **API Call** | HTTPS direct to Resend | ✅ Encrypted in transit |
-| **Logging** | Nowhere | ✅ Never logged |
-| **Storage** | Nowhere | ✅ Never persisted |
+| **Input** | Password field in browser | ✅ Visible only to user |
+| **Transit 1** | Browser → Proxy | ✅ HTTP Authorization header (localhost or HTTPS) |
+| **Proxy** | Memory, not stored | ✅ Only read from headers, never persisted |
+| **Transit 2** | Proxy → Resend | ✅ HTTPS with Authorization header |
+| **Resend** | Resend systems | ✅ Resend's responsibility |
+| **Logging** | Server logs | ⚠️ Only request metadata, no keys or email content |
 
-### CORS Configuration
+### What Gets Logged
 
-- All API calls go directly from browser to `https://api.resend.com`
-- Resend API allows CORS for Bearer token auth
-- No proxy or relay needed
+✅ Safe to log:
+- Request path (`/api/send`, `/api/domains`)
+- Request method (GET, POST)
+- Response status code (200, 401, 429, etc.)
+- Timestamp
+- Hostname/region
 
-### No Backend Required
+❌ Never logged:
+- Authorization header content
+- Request body content
+- Email addresses or subject
+- Email HTML body
 
-This means:
-- ✅ Nothing to deploy (no servers, no scaling, no downtime)
-- ✅ Nothing to hack (no backend to compromise)
-- ✅ Nothing to trust (only Resend, which users already trust)
+### CORS Handling
+
+**Problem:** Resend API doesn't accept CORS requests from browsers
+
+**Solution:** Proxy forwards requests server-to-server
+- Browser calls proxy (same origin, no CORS needed)
+- Proxy calls Resend (server-to-server, no CORS issues)
+- Proxy returns response to browser (no CORS needed)
+
+## Deployment Architecture
+
+### Local Development
+```bash
+node api-proxy.js  # Starts on http://localhost:3001
+# Open index.html in browser
+# API URL auto-detects: http://localhost:3001
+```
+
+### Production (Railway)
+```bash
+# api-proxy.js runs on PORT (default 8080)
+# Automatically detects production domain
+# API URL: https://resendpad.up.railway.app
+# index.html served from root /
+```
+
+### Environment Detection
+```javascript
+const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3001'
+  : `${window.location.protocol}//${window.location.host}`;
+```
 
 ## Deployment Options
 
-### 1. GitHub Pages (Recommended)
+### Railway (Recommended)
+- Automatic deployment from GitHub
+- Automatic HTTPS
+- Automatic domain routing
+- Auto-scales to handle load
 
+**How to deploy:**
 ```bash
-# Already set up in this repo
-# URL: https://rozetyp.github.io/resend-email/
+railway link         # Connect to project
+railway up          # Deploy latest code
+railway logs        # View logs
 ```
 
-**Pros:**
-- Instant, free, always available
-- Source code visible in repo
-- Users can audit the code
-- No backend complexity
+### Self-Hosted (Vercel, Netlify, own server)
+- Clone repo
+- Deploy: `npm install && node api-proxy.js`
+- Requires Node.js 18+
+- Auto-detects production domain
 
-### 2. Self-Hosted (Any Static Host)
-
-```bash
-# Netlify
-netlify deploy --prod --dir .
-
-# Vercel
-vercel --prod
-
-# S3
-aws s3 cp index.html s3://your-bucket/
-
-# Any web server
-cp index.html /var/www/html/
+### Docker
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY . .
+EXPOSE 3001
+CMD ["node", "api-proxy.js"]
 ```
 
-**Pros:**
-- Full control
-- Can add custom domain
-- Can add basic auth if desired
+## Scaling Considerations
 
-### 3. Local File
+### Current Limitations
+- Single server instance (no load balancing)
+- No database (stateless)
+- No caching (each request fresh)
 
-```bash
-# Download index.html
-# Open in browser: file:///path/to/index.html
-# Works completely offline
-```
+### How to Scale
+1. **Horizontally:** Deploy multiple instances behind load balancer (Railway handles this)
+2. **Rate limiting:** Add middleware to prevent abuse
+3. **Caching:** Add Redis for domain caching if needed
+4. **Monitoring:** Use Railway dashboard to monitor request volume
 
-**Pros:**
-- Maximum privacy
-- No network calls except to Resend
+## Future Additions (Low Priority)
 
-## Development
-
-### No Build Step
-
-```bash
-# Just edit index.html
-# Open in browser
-# Test immediately
-```
-
-### Updating Pell or Tailwind
-
-Edit the CDN links in `<head>`:
-
-```html
-<!-- Update version in CDN URL -->
-<script src="https://cdn.tailwindcss.com"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
-```
-
-### Adding Features
-
-Edit JavaScript in `<script>` tag:
-
-```javascript
-// All code is in index.html
-// No separate files needed
-// Keep it minimal and focused
-```
-
-## Testing
-
-### Manual Testing
-
-1. Open `index.html` in browser
-2. Enter valid Resend API key
-3. Click "Load Domains" → verify domains appear
-4. Fill form with test data
-5. Click "Preview" → verify formatting
-6. Click "Send Email" → verify success message with email ID
-7. Check recipient inbox for email
-
-### Automated Testing
-
-Since this is client-side, testing is tricky. Use:
-
-```bash
-# Open in headless browser
-# Use Puppeteer, Playwright, or similar
-# Simulate form fills and clicks
-# Verify success messages
-```
-
-## Maintenance
-
-### Updates Needed When
-
-- Resend API changes (rare)
-- Pell API changes (rare)
-- Tailwind classes change (rare)
-- Browser compatibility issues (very rare)
-
-### How to Update
-
-1. Edit `index.html`
-2. Test in browser
-3. Commit to git
-4. Push to GitHub
-5. Changes live instantly on GitHub Pages
-
-## Future Considerations
-
-### Could Add (Without Backend)
-
-- ✅ Multiple email recipients (CSV paste)
-- ✅ Email templates (localStorage, user's browser)
-- ✅ Scheduled sends (user's local scheduler)
+### Could Add Without Major Changes
+- ✅ Email templates (localStorage, client-side only)
+- ✅ Send history (localStorage, browser-only)
+- ✅ Keyboard shortcuts (client-side only)
 - ✅ Dark mode toggle (localStorage preference)
-- ✅ Keyboard shortcuts (all client-side)
+- ✅ Multiple recipients (already supported)
 
-### Should NOT Add (Would Require Backend)
-
-- ❌ User accounts
-- ❌ Email history
-- ❌ Shared templates across users
-- ❌ Team workspaces
-- ❌ API to save/restore forms
-
-**Philosophy:** Keep it minimal. One job, done well.
+### Should NOT Add (Avoid Complexity)
+- ❌ User accounts (defeats purpose)
+- ❌ Email history database (centralized storage)
+- ❌ Shared templates (requires backend DB)
+- ❌ Analytics (violates privacy principle)
 
 ## Philosophy
 
-This app exists because:
+This app is built on a simple principle:
 
-1. **Trust is paramount for API key tools**
-   - Users need to verify their key is safe
-   - Only way to prove this: no backend
+> **Minimal code, maximum trust.**
 
-2. **Simplicity is security**
-   - Fewer moving parts = fewer things to break
-   - Fewer things to exploit
+Why a proxy instead of 100% client-side?
 
-3. **Utility apps should be boring**
-   - Do one thing
-   - Do it well
-   - Get out of the way
+1. **Browser can't handle CORS to Resend** - so proxy solves it
+2. **Proxy is stateless** - no persistence, no tracking
+3. **API key is passed through** - never stored or logged
+4. **Transparent and auditable** - all code visible, simple logic
+5. **Works everywhere** - same behavior locally or deployed
 
-4. **Users own their data**
-   - Not us, not advertisers, not AI companies
-   - Just the user and Resend
+The proxy adds ONE level of indirection for technical reasons (CORS), but maintains the trust model: keys are never stored, never logged, never exposed beyond the request header.
 
 ---
 
 **Resend Pad: The simplest, most trustworthy way to send emails with Resend.**
+

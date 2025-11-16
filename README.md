@@ -1,69 +1,74 @@
 # Resend Pad
 
-A minimal, 100% client-side utility to send emails using your Resend API key.
+A minimal email utility to send emails using your Resend API key.
 
-**No server. No backend. Your API key stays in your browser.**
+**Simple. Trustworthy. Works everywhere.**
 
 ## Overview
 
-- **Pure Client-Side**: Single HTML file, no backend required
-- **Trustworthy**: API key is never sent to our servers—only to Resend's API directly
+- **Client-Side UI**: Single HTML file frontend
+- **Lightweight Proxy**: Node.js proxy handles CORS (no API key exposure)
+- **Trustworthy**: API key is only used in HTTP headers, never logged or stored
 - **Open Source**: Full source code visible; audit the security yourself
-- **Standalone**: Works offline, can be hosted anywhere (GitHub Pages, S3, locally)
-- **Minimal**: One job: compose and send emails with your Resend key
+- **Works Anywhere**: Deploy to Railway, Vercel, self-hosted, or local
 
 ## Quick Start
 
-### Option 1: Open Online (Easiest)
+### Online (Railway Deployment)
 ```
-https://rozetyp.github.io/resend-email/index.html
+https://resendpad.up.railway.app
 ```
 
-### Option 2: Download & Run Locally
-1. Download `index.html` from this repo
-2. Open in your browser
-3. Paste your Resend API key
-4. Send emails
+### Local Development
+```bash
+# Terminal 1: Start the API proxy
+node api-proxy.js
+
+# Terminal 2: Open the app
+# Visit http://localhost:9000/index.html
+# Or just open index.html directly in browser
+```
 
 ## How It Works
 
-1. **Paste your API key** into the form (it stays in your browser)
-2. **Select a verified domain** from Resend (or use "Load Domains" to fetch them)
+1. **Paste your API key** into the form
+2. **Load your verified domains** (optional - or enter manually)
 3. **Compose your email** using the rich text editor
-4. **Preview** the email before sending
-5. **Send** directly from your browser to Resend's API
-
-Your API key is **never** sent to our servers. It's used only to authenticate directly with Resend.
+4. **Preview** before sending (optional)
+5. **Send** - proxied through your local/deployed server to Resend API
 
 ## Features
 
 - **WYSIWYG Editor**: Rich text formatting with Pell
-- **Domain Loader**: Fetch and auto-populate verified domains from your Resend account
+- **Domain Loader**: Fetch verified domains from your Resend account
 - **Email Preview**: See exactly how your email will look
-- **Direct API Call**: Sends to `https://api.resend.com/emails` from your browser
-- **Error Handling**: Clear error messages from Resend's API
+- **Batch Sending**: Keep form filled, just change recipient
+- **Error Handling**: Clear error messages from Resend API
 - **Responsive**: Works on desktop, tablet, and mobile
 
 ## Security
 
-- **API key never logged** – Used only in your browser memory
-- **No data storage** – No databases, no caching, no tracking
+- **API key never logged** – Used only in HTTP Authorization header
+- **No data storage** – No databases, no caching, no analytics
 - **No user accounts** – Just you and your key
 - **Open source** – Check the code yourself
-- **CORS direct call** – Resend API is called directly from your browser
+- **Proxy pattern** – CORS is handled server-side, not exposed to browser
 
 ## Requirements
 
 - A modern web browser (Chrome, Firefox, Safari, Edge)
 - A Resend account with an API key
-- At least one verified domain in Resend
+- At least one verified domain in Resend (or manually entered verified domain)
 
 ## Getting Your Resend API Key
 
 1. Go to [resend.com](https://resend.com)
 2. Sign up or log in
 3. Go to Settings → API Keys
-4. Copy your API key (starts with `re_`)
+4. Create a new API key with "Full Access" permissions
+5. Copy and paste into Resend Pad
+
+**Note:** "Sending Only" keys cannot list domains, but can send emails if you manually enter the From address.
 
 ## Verified Domain Setup
 
@@ -73,37 +78,92 @@ Your API key is **never** sent to our servers. It's used only to authenticate di
 
 ## Deployment
 
-### GitHub Pages (Recommended)
-The repo is already set up for GitHub Pages. The `index.html` is served at:
+### Railway (Recommended - Easiest)
+
+```bash
+# Already deployed and live at:
+# https://resendpad.up.railway.app
+
+# To redeploy after changes:
+railway up
 ```
-https://rozetyp.github.io/resend-email/
+
+**How it works:**
+- Railway runs `node api-proxy.js` on the default PORT
+- Frontend served from `index.html` at root `/`
+- API calls proxied through `/api/*` endpoints
+- Auto-detects production domain and routes accordingly
+
+### Self-Hosted (Vercel, Netlify, own server)
+
+```bash
+# 1. Clone repo
+git clone https://github.com/rozetyp/resend-email.git
+cd resend-email
+
+# 2. Deploy with your provider
+# Vercel/Netlify: Connect repo, auto-deploys
+# Own server: npm install && node api-proxy.js
+
+# 3. App auto-detects environment
+# - Local: uses http://localhost:3001
+# - Production: uses your deployed domain
 ```
 
-### Self-Hosted
-Download `index.html` and host it anywhere:
-- Vercel, Netlify, S3
-- Your own server
-- Open it locally (works offline)
+### Local Development (No deployment)
 
-### Local Development
-No server needed. Just open `index.html` in your browser.
+```bash
+# Just open index.html in your browser
+# API calls will attempt localhost:3001
+# Start proxy with: node api-proxy.js
+```
 
-## Technical Details
+## Technical Stack
 
-- **HTML5** + **Vanilla JavaScript** (no frameworks)
-- **Tailwind CSS** for styling
-- **Pell** for rich text editing
-- **Fetch API** for direct CORS calls to Resend
+**Frontend:**
+- HTML5 + Vanilla JavaScript (no frameworks)
+- Tailwind CSS (CDN) for styling
+- Pell for rich text editing
+
+**Backend:**
+- Node.js + native HTTP server
+- Proxies requests to Resend API
+- Serves static files (index.html, CSS, etc.)
+- Handles CORS automatically
+
+## How the Proxy Works
+
+```
+Browser                    Your Server (api-proxy.js)       Resend API
+  │                              │                              │
+  ├─ POST /api/send ────────────>│                              │
+  │  (with Bearer token)         ├─ POST /emails ──────────────>│
+  │                              │  (with your API key)         │
+  │                              │<─ 200 OK ────────────────────┤
+  │<─ 200 OK ─────────────────────┤                              │
+  │                              │                              │
+```
+
+**Why a proxy?**
+- Resend API doesn't support CORS from browsers
+- Proxy handles CORS transparently
+- API key is passed through, never exposed to browser
+- All requests logged on server for debugging
 
 ## Privacy
 
 This tool:
-- ❌ Does NOT collect your data
-- ❌ Does NOT log your emails
+- ❌ Does NOT collect your personal data
+- ❌ Does NOT log email content (only request status)
 - ❌ Does NOT use analytics or trackers
-- ❌ Does NOT store your API key
 - ✅ IS 100% open source
-- ✅ CAN be self-hosted
+- ✅ CAN be self-hosted for complete privacy
+
+**API Key Safety:**
+- Your key is sent in HTTP headers only
+- Never logged to disk in production
+- Lost when container restarts (no persistence)
+- You can rotate keys anytime in Resend dashboard
 
 ## License
 
@@ -113,29 +173,6 @@ Open source. Use freely.
 
 Issues? Questions?
 - [Open an issue on GitHub](https://github.com/rozetyp/resend-email/issues)
-- Check the source code in `index.html`
+- Check the source code in `index.html` and `api-proxy.js`
 
-- The dropdown constructs addresses like `no-reply@yourdomain` or `Name <no-reply@yourdomain>` using the name part of `DEFAULT_FROM`.
-
-Security & deployment notes
-
-- This project is intended as a tiny internal tool. The `/send` endpoint triggers real email sends using your `RESEND_API_KEY`. If you deploy publicly, protect it.
-- Recommended protections:
-	- Set `REQUIRE_AUTH=1` and configure `ADMIN_USER`/`ADMIN_PASS`, or require an `X-API-KEY` token.
-	- Add rate-limiting to prevent abuse.
-	- Run behind an authenticated network or reverse proxy (Cloudflare/railway auth, or private network).
-	- Log send attempts (avoid logging secrets) and monitor usage.
-
-CI / safe testing
-
-- For CI, mock the Resend API (use `requests-mock` or `responses`) and test the FastAPI handlers with `TestClient` to avoid sending real email.
-
-Extending
-
-- Replace raw HTTP calls with the official `resend` Python SDK if you prefer client helpers.
-- Add saved templates, a domain selector that validates server-side, or multi-tenant BYOK in future iterations.
-
-License / notes
-
-- This is a tiny internal tool example — use at your own risk and do not commit real secrets to the repo.
 
