@@ -1,12 +1,14 @@
 INFO:     Will watch for changes in these directories: ['/Users/antonzaytsev/Documents/resend-ui']
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     Started reloader process [54699] using WatchFiles
-INFO:     Started server process [54820]
+INFO:     Started reloader process [57107] using WatchFiles
+INFO:     Started server process [57228]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
-INFO:     127.0.0.1:53811 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53816 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53821 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53825 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53942 - "GET / HTTP/1.1" 200 OK
-INFO:     127.0.0.1:53969 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54039 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54045 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54055 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54055 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54087 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET / HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54085 - "GET / HTTP/1.1" 200 OK
