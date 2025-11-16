@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <title>Resend BYOK Mailer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
   <style>
     body {
       font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -33,7 +34,6 @@
     .pell-toolbar button { background: #000 !important; color: #fff !important; padding: 0.4rem 0.8rem !important; border-radius: 4px !important; border: none !important; font-size: 0.85rem !important; font-weight: 600 !important; cursor: pointer !important; margin-right: 0.25rem !important; }
     .pell-toolbar button:hover { background: #333 !important; }
   </style>
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
 </head>
 <body>
   <div class="card">
@@ -133,23 +133,21 @@
           ]
         });
 
-        // Apply black styling to toolbar buttons
-        setTimeout(function() {
-          const buttons = document.querySelectorAll('.pell-toolbar button');
-          buttons.forEach(btn => {
-            btn.style.backgroundColor = '#000';
-            btn.style.color = '#fff';
-            btn.style.padding = '0.4rem 0.8rem';
-            btn.style.borderRadius = '4px';
-            btn.style.border = 'none';
-            btn.style.fontSize = '0.85rem';
-            btn.style.fontWeight = '600';
-            btn.style.cursor = 'pointer';
-            btn.style.marginRight = '0.25rem';
-            btn.addEventListener('mouseenter', () => btn.style.backgroundColor = '#333');
-            btn.addEventListener('mouseleave', () => btn.style.backgroundColor = '#000');
-          });
-        }, 100);
+        // Style toolbar buttons black immediately after init
+        const buttons = document.querySelectorAll('.pell-toolbar button');
+        buttons.forEach(btn => {
+          btn.style.backgroundColor = '#000';
+          btn.style.color = '#fff';
+          btn.style.padding = '0.4rem 0.8rem';
+          btn.style.borderRadius = '4px';
+          btn.style.border = 'none';
+          btn.style.fontSize = '0.85rem';
+          btn.style.fontWeight = '600';
+          btn.style.cursor = 'pointer';
+          btn.style.marginRight = '0.25rem';
+          btn.onmouseenter = () => btn.style.backgroundColor = '#333';
+          btn.onmouseleave = () => btn.style.backgroundColor = '#000';
+        });
 
         // Pre-populate editor if there's saved content
         if(document.getElementById('body').value){
