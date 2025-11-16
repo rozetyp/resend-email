@@ -131,20 +131,12 @@
           ]
         });
 
-        // Style toolbar buttons black immediately after init
+        // Style toolbar buttons black text
         const buttons = document.querySelectorAll('.pell-button');
         buttons.forEach(btn => {
-          btn.style.backgroundColor = '#000';
-          btn.style.color = '#fff';
-          btn.style.padding = '0.4rem 0.8rem';
-          btn.style.borderRadius = '4px';
-          btn.style.border = 'none';
-          btn.style.fontSize = '0.85rem';
+          btn.style.color = '#000';
           btn.style.fontWeight = '600';
           btn.style.cursor = 'pointer';
-          btn.style.marginRight = '0.25rem';
-          btn.onmouseenter = () => btn.style.backgroundColor = '#333';
-          btn.onmouseleave = () => btn.style.backgroundColor = '#000';
         });
 
         // Pre-populate editor if there's saved content
