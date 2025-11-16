@@ -1,53 +1,120 @@
-# Resend BYOK (minimal)
+# Resend Pad
 
-Tiny self-hosted mailer that uses your Resend API key to send emails from your verified domain.
+A minimal, 100% client-side utility to send emails using your Resend API key.
 
-Overview
+**No server. No backend. Your API key stays in your browser.**
 
-- Server: FastAPI (`app/main.py`) exposes a small HTML form and a `/send` endpoint that calls Resend's HTTP API.
-- UI: simple Jinja2 template at `app/templates/index.html` (From / To / Subject / Body).
-- BYOK: you provide the Resend API key via environment variable `RESEND_API_KEY`.
+## Overview
 
-Quick start (local)
+- **Pure Client-Side**: Single HTML file, no backend required
+- **Trustworthy**: API key is never sent to our servers—only to Resend's API directly
+- **Open Source**: Full source code visible; audit the security yourself
+- **Standalone**: Works offline, can be hosted anywhere (GitHub Pages, S3, locally)
+- **Minimal**: One job: compose and send emails with your Resend key
 
-1. Copy `.env.example` to `.env` and set `RESEND_API_KEY` and `DEFAULT_FROM`.
+## Quick Start
 
-```bash
-cp .env.example .env
-# edit .env and set RESEND_API_KEY and DEFAULT_FROM
+### Option 1: Open Online (Easiest)
+```
+https://rozetyp.github.io/resend-email/index.html
 ```
 
-2. Install dependencies and run locally (preferably in a virtualenv):
+### Option 2: Download & Run Locally
+1. Download `index.html` from this repo
+2. Open in your browser
+3. Paste your Resend API key
+4. Send emails
 
-```bash
-pip install -r requirements.txt
-uvicorn app.main:app --reload
+## How It Works
+
+1. **Paste your API key** into the form (it stays in your browser)
+2. **Select a verified domain** from Resend (or use "Load Domains" to fetch them)
+3. **Compose your email** using the rich text editor
+4. **Preview** the email before sending
+5. **Send** directly from your browser to Resend's API
+
+Your API key is **never** sent to our servers. It's used only to authenticate directly with Resend.
+
+## Features
+
+- **WYSIWYG Editor**: Rich text formatting with Pell
+- **Domain Loader**: Fetch and auto-populate verified domains from your Resend account
+- **Email Preview**: See exactly how your email will look
+- **Direct API Call**: Sends to `https://api.resend.com/emails` from your browser
+- **Error Handling**: Clear error messages from Resend's API
+- **Responsive**: Works on desktop, tablet, and mobile
+
+## Security
+
+- **API key never logged** – Used only in your browser memory
+- **No data storage** – No databases, no caching, no tracking
+- **No user accounts** – Just you and your key
+- **Open source** – Check the code yourself
+- **CORS direct call** – Resend API is called directly from your browser
+
+## Requirements
+
+- A modern web browser (Chrome, Firefox, Safari, Edge)
+- A Resend account with an API key
+- At least one verified domain in Resend
+
+## Getting Your Resend API Key
+
+1. Go to [resend.com](https://resend.com)
+2. Sign up or log in
+3. Go to Settings → API Keys
+4. Copy your API key (starts with `re_`)
+
+## Verified Domain Setup
+
+1. In Resend dashboard, go to Domains
+2. Add a new domain and verify ownership (DNS records)
+3. Once verified, you can use that domain in Resend Pad
+
+## Deployment
+
+### GitHub Pages (Recommended)
+The repo is already set up for GitHub Pages. The `index.html` is served at:
+```
+https://rozetyp.github.io/resend-email/
 ```
 
-3. Open `http://127.0.0.1:8000` and use the UI to send a test email.
+### Self-Hosted
+Download `index.html` and host it anywhere:
+- Vercel, Netlify, S3
+- Your own server
+- Open it locally (works offline)
 
-Configuration (env vars)
+### Local Development
+No server needed. Just open `index.html` in your browser.
 
-- `RESEND_API_KEY` (required): your Resend API key, e.g. `re_...`.
-- `DEFAULT_FROM` (optional): default From address, e.g. `Anton <no-reply@example.com>`.
-- `REQUIRE_AUTH` (optional, default `0`): set to `1` to require HTTP Basic auth for the UI and `/send`.
-- `ADMIN_USER` / `ADMIN_PASS` (optional): credentials used when `REQUIRE_AUTH=1`.
+## Technical Details
 
-Testing & E2E
+- **HTML5** + **Vanilla JavaScript** (no frameworks)
+- **Tailwind CSS** for styling
+- **Pell** for rich text editing
+- **Fetch API** for direct CORS calls to Resend
 
-- Manual: start the server and use the web form; verify the recipient inbox.
-- Scripted: a small script `scripts/e2e_send.py` posts to `/send` for quick automated checks (it performs real sends).
+## Privacy
 
-Example (scripted):
+This tool:
+- ❌ Does NOT collect your data
+- ❌ Does NOT log your emails
+- ❌ Does NOT use analytics or trackers
+- ❌ Does NOT store your API key
+- ✅ IS 100% open source
+- ✅ CAN be self-hosted
 
-```bash
-# ensure RESEND_API_KEY is set to a real key
-python scripts/e2e_send.py --to you@example.com --subject "E2E test" --body "<p>hello</p>"
-```
+## License
 
-Notes about domains
+Open source. Use freely.
 
-- The app attempts to list verified domains from Resend and presents a small domain dropdown to populate the `From` field.
+## Support
+
+Issues? Questions?
+- [Open an issue on GitHub](https://github.com/rozetyp/resend-email/issues)
+- Check the source code in `index.html`
+
 - The dropdown constructs addresses like `no-reply@yourdomain` or `Name <no-reply@yourdomain>` using the name part of `DEFAULT_FROM`.
 
 Security & deployment notes
