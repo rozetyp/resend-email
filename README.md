@@ -2,15 +2,15 @@
 
 A minimal email utility to send emails using your Resend API key.
 
-**Simple. Trustworthy. Works everywhere.**
+**Send emails from your browser. No code, no accounts, no storage.**
 
 ## Overview
 
-- **Client-Side UI**: Single HTML file frontend
-- **Lightweight Proxy**: Node.js proxy handles CORS (no API key exposure)
-- **Trustworthy**: API key is only used in HTTP headers, never logged or stored
-- **Open Source**: Full source code visible; audit the security yourself
-- **Works Anywhere**: Deploy to Railway, Vercel, self-hosted, or local
+- **Browser-Based UI**: No installation. Open in any modern browser and start sending.
+- **CORS Proxy**: Node.js backend handles API communication (Resend API doesn't accept browser requests directly).
+- **API Key Privacy**: Your Resend API key is sent directly to Resend's API in request headers. Never stored, logged, or persisted on our servers.
+- **Open Source**: Full source code visible. Self-host or audit the security yourself.
+- **Deploy Anywhere**: Railway (easiest), Vercel, Netlify, or any server running Node.js.
 
 ## Quick Start
 
@@ -34,28 +34,28 @@ node api-proxy.js
 ## How It Works
 
 1. **Paste your API key** into the form
-2. **Load your verified domains** (optional - or enter manually)
-3. **Compose your email** using the rich text editor
-4. **Preview** before sending (optional)
-5. **Send** - proxied through your local/deployed server to Resend API
+2. **Load your verified domains** from Resend (or enter the From email manually)
+3. **Enter recipient email and subject**
+4. **Compose your email** using the rich text editor (bold, italic, links, lists, etc.)
+5. **Click Send** – your email is delivered via Resend immediately
 
 ## Features
 
-- **WYSIWYG Editor**: Rich text formatting with Pell
-- **Domain Loader**: Fetch verified domains from your Resend account
-- **Batch Sending**: Keep form filled, just change recipient
-- **Error Handling**: Clear error messages from Resend API
-- **Responsive**: Works on desktop, tablet, and mobile
-- **SEO Landing Page**: Dedicated landing page for organic traffic
-- **BYOK Model**: Bring Your Own Key – no accounts required
+- **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, and code blocks
+- **Domain Loader**: Fetch verified sender domains directly from your Resend account
+- **Batch Sending**: Reuse form values – just change the recipient email for each send
+- **Clear Error Messages**: Know exactly why a send failed (invalid domain, auth errors, etc.)
+- **Mobile Friendly**: Works on desktop, tablet, and mobile browsers
+- **SEO Landing Page**: Dedicated page at `/landing.html` to drive organic search traffic
+- **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
 
 ## Security
 
-- **API key never logged** – Used only in HTTP Authorization header
-- **No data storage** – No databases, no caching, no analytics
-- **No user accounts** – Just you and your key
-- **Open source** – Check the code yourself
-- **Proxy pattern** – CORS is handled server-side, not exposed to browser
+- **Your API key never leaves your control** – Sent directly to Resend's API in the Authorization header. We don't store, log, or persist it.
+- **No email content is logged** – Email subject and body are forwarded to Resend and discarded. No database, no history, no backups.
+- **No user accounts or tracking** – No sign-up, no login, no email collection, no analytics, no cookies.
+- **Transparent & auditable** – Full source code on GitHub. Self-host if you want complete control.
+- **Stateless design** – The proxy doesn't store anything. Restart the server and everything is cleared.
 
 ## Requirements
 
