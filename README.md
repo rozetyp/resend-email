@@ -100,6 +100,8 @@ railway up
 - API calls proxied through `/api/*` endpoints
 - Auto-detects production domain and routes accordingly
 
+**New to Railway?** [Deploy to Railway with referral](https://railway.com?referralCode=CEnEQp) – both of us get $5 credit.
+
 ### Self-Hosted (Vercel, Netlify, own server)
 
 ```bash
