@@ -143,7 +143,7 @@
               <input 
                 id="from_email" 
                 name="from_email" 
-                type="text" 
+                type="email" 
                 class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
                 placeholder="no-reply@yourdomain.com" 
                 required 
@@ -198,7 +198,10 @@
           <div id="error-message" class="hidden p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert"></div>
 
           <!-- ACTION BUTTONS -->
-          <div class="flex justify-end">
+          <div class="flex justify-between">
+            <button type="reset" id="reset_btn" class="text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-5 py-2.5">
+              Reset
+            </button>
             <button type="submit" id="send_btn" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 focus:outline-none">
               Send Email
             </button>
@@ -327,6 +330,19 @@
         const errorDiv = document.getElementById('error-message');
         const messageContainer = document.getElementById('message_container');
         const sendBtn = document.getElementById('send_btn');
+        const resetBtn = document.getElementById('reset_btn');
+
+        // Reset button handler (clears Pell editor too)
+        resetBtn.addEventListener('click', function() {
+          form.reset();
+          const pellContent = document.querySelector('#pell .pell-content');
+          if (pellContent) {
+            pellContent.innerHTML = '';
+          }
+          document.getElementById('body').value = '';
+          errorDiv.classList.add('hidden');
+          messageContainer.innerHTML = '';
+        });
 
         if(form){
           form.addEventListener('submit', async function(e){
