@@ -33,20 +33,22 @@ node api-proxy.js
 
 ## How It Works
 
-1. **Paste your API key** into the form
-2. **Load your verified domains** from Resend (or enter the From email manually)
+1. **Paste your API key** into the form (stored only in browser memory)
+2. **Load your verified domains** from Resend with "Load Domains" button (or enter From email manually)
 3. **Enter recipient email and subject**
-4. **Compose your email** using the rich text editor (bold, italic, links, lists, etc.)
+4. **Compose your email** using the Quill rich text editor with formatting toolbar
 5. **Click Send** – your email is delivered via Resend immediately
+6. **Use Reset** to clear all fields and start fresh (focus returns to editor for easy typing)
 
 ## Features
 
-- **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, and code blocks
-- **Domain Loader**: Fetch verified sender domains directly from your Resend account
+- **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, code blocks, and clean formatting using Quill.js
+- **Domain Loader**: Fetch verified sender domains directly from your Resend account with one click
+- **Reset Function**: Clear all form fields and editor content with Reset button that properly returns focus to editor
 - **Batch Sending**: Reuse form values – just change the recipient email for each send
 - **Clear Error Messages**: Know exactly why a send failed (invalid domain, auth errors, etc.)
 - **Mobile Friendly**: Works on desktop, tablet, and mobile browsers
-- **SEO Landing Page**: Dedicated page at `/landing.html` to drive organic search traffic
+- **SEO Landing Page**: Dedicated page at `/landing.html` to drive organic search traffic  
 - **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
 
 ## Security
@@ -131,9 +133,10 @@ cd resend-email
 **Frontend:**
 - HTML5 + Vanilla JavaScript (no frameworks)
 - Tailwind CSS (CDN) for styling
-- Pell for rich text editing
-- SEO-optimized landing page
+- Quill.js for rich text editing (replaced Pell for better reliability)
+- SEO-optimized landing page with comprehensive meta tags
 - Favicon (inline SVG)
+- Google Site Verification for Search Console
 
 **Backend:**
 - Node.js + native HTTP server
