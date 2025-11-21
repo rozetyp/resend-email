@@ -316,6 +316,8 @@
           form.reset();
           if (quill) {
             quill.setContents([]);
+            // Refocus the editor after reset
+            setTimeout(() => quill.focus(), 100);
           }
           document.getElementById('body').value = '';
           errorDiv.classList.add('hidden');
