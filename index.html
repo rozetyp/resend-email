@@ -236,8 +236,25 @@
             'heading2',
             'olist',
             'ulist',
-            { name: 'link', result: () => { const url = prompt('Enter URL'); if(url) window.pell.exec('createLink', url); } },
-            { name: 'code', result: () => window.pell.exec('formatBlock', '<pre>') }
+            {
+              name: 'link',
+              icon: '🔗',
+              title: 'Link',
+              result: function() {
+                const url = window.prompt('Enter the link URL');
+                if (url) {
+                  window.pell.exec('createLink', url);
+                }
+              }
+            },
+            {
+              name: 'code',
+              icon: '</>',
+              title: 'Code',
+              result: function() {
+                window.pell.exec('formatBlock', '<pre>');
+              }
+            }
           ]
         });
 
