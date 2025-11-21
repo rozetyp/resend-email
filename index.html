@@ -20,8 +20,8 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%232563eb'>P</text></svg>" />
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Pell Rich Text Editor CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.min.css" />
+  <!-- Quill Rich Text Editor CSS -->
+  <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
   
   <script type="application/ld+json">
   {
@@ -46,52 +46,30 @@
   </script>
   
   <style>
-    /* Custom styles for the Pell editor to match the Tailwind theme */
-    .pell-content {
-      outline: 0;
+    /* Custom styles for Quill editor */
+    .ql-editor {
       min-height: 250px;
-      padding: 0.75rem; /* p-3 */
-      background-color: #ffffff; /* bg-white */
-      color: #111827; /* text-gray-900 */
-      border: 1px solid #d1d5db; /* border-gray-300 */
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    
+    .ql-toolbar.ql-snow {
+      border-top: 1px solid #d1d5db;
+      border-left: 1px solid #d1d5db;
+      border-right: 1px solid #d1d5db;
+      border-bottom: 0;
+      border-top-left-radius: 0.5rem;
+      border-top-right-radius: 0.5rem;
+      background: #f9fafb;
+    }
+    
+    .ql-container.ql-snow {
+      border-bottom: 1px solid #d1d5db;
+      border-left: 1px solid #d1d5db;
+      border-right: 1px solid #d1d5db;
       border-top: 0;
-      border-bottom-left-radius: 0.5rem; /* rounded-lg */
-      border-bottom-right-radius: 0.5rem; /* rounded-lg */
-      line-height: 1.6;
+      border-bottom-left-radius: 0.5rem;
+      border-bottom-right-radius: 0.5rem;
     }
-    
-    .pell-actionbar {
-      background-color: #f9fafb; /* bg-gray-50 */
-      border: 1px solid #d1d5db; /* border-gray-300 */
-      border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
-      border-top-left-radius: 0.5rem; /* rounded-lg */
-      border-top-right-radius: 0.5rem; /* rounded-lg */
-      padding: 0.25rem;
-    }
-    
-    .pell-button {
-      color: #374151; /* text-gray-700 */
-      border-radius: 0.375rem; /* rounded-md */
-      transition: background-color 0.2s ease, color 0.2s ease;
-    }
-    
-    .pell-button:hover {
-      background-color: #e5e7eb; /* bg-gray-200 */
-    }
-    
-    .pell-button-selected {
-      background-color: #dbeafe; /* bg-blue-100 */
-      color: #1e40af; /* text-blue-800 */
-    }
-
-    /* Basic styling for the previewed email */
-    #preview_content h1 { font-size: 1.875rem; font-weight: 600; margin-bottom: 0.5rem; }
-    #preview_content h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 0.5rem; }
-    #preview_content p { margin-bottom: 1rem; }
-    #preview_content ul { list-style-type: disc; margin-left: 1.5rem; margin-bottom: 1rem; }
-    #preview_content ol { list-style-type: decimal; margin-left: 1.5rem; margin-bottom: 1rem; }
-    #preview_content a { color: #2563eb; text-decoration: underline; }
-    #preview_content pre { background-color: #f3f4f6; padding: 1rem; border-radius: 0.5rem; overflow-x: auto; }
   </style>
 </head>
 
@@ -183,10 +161,10 @@
             />
           </div>
 
-          <!-- EMAIL BODY (PELL EDITOR) -->
+          <!-- EMAIL BODY (QUILL EDITOR) -->
           <div class="mb-5">
-            <label for="pell" class="block mb-2 text-sm font-medium text-gray-900">Email Body</label>
-            <div id="pell" class="pell"></div>
+            <label for="quill-editor" class="block mb-2 text-sm font-medium text-gray-900">Email Body</label>
+            <div id="quill-editor"></div>
             <input type="hidden" id="body" name="body" value="" />
           </div>
 
@@ -212,8 +190,8 @@
     </div>
   </div>
 
-  <!-- ============ PELL EDITOR & INTERACTIONS ============ -->
-  <script src="https://cdn.jsdelivr.net/npm/pell@1.0.2/dist/pell.js"></script>
+  <!-- ============ QUILL EDITOR & INTERACTIONS ============ -->
+  <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
   <script>
     // Auto-detect API URL based on environment
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
@@ -221,75 +199,30 @@
       : `${window.location.protocol}//${window.location.host}`;
     
     document.addEventListener('DOMContentLoaded', function() {
-        // ============ PELL EDITOR ============
-        window.pell.init({
-          element: document.getElementById('pell'),
-          onChange: function(html) {
-            document.getElementById('body').value = html;
-          },
-          defaultParagraphSeparator: 'p',
-          actions: [
-            'bold',
-            'italic',
-            'underline',
-            {
-              name: 'heading1',
-              icon: 'H1',
-              title: 'Heading 1',
-              result: function() {
-                window.pell.exec('formatBlock', '<h1>');
-              }
-            },
-            {
-              name: 'heading2',
-              icon: 'H2',
-              title: 'Heading 2',
-              result: function() {
-                window.pell.exec('formatBlock', '<h2>');
-              }
-            },
-            {
-              name: 'olist',
-              icon: '#',
-              title: 'Ordered List',
-              result: function() {
-                window.pell.exec('insertOrderedList');
-              }
-            },
-            {
-              name: 'ulist',
-              icon: '•',
-              title: 'Unordered List',
-              result: function() {
-                window.pell.exec('insertUnorderedList');
-              }
-            },
-            {
-              name: 'link',
-              icon: '🔗',
-              title: 'Link',
-              result: function() {
-                const url = window.prompt('Enter the link URL');
-                if (url) {
-                  window.pell.exec('createLink', url);
-                }
-              }
-            },
-            {
-              name: 'code',
-              icon: '</>',
-              title: 'Code',
-              result: function() {
-                window.pell.exec('formatBlock', '<pre>');
-              }
-            }
-          ]
+        // ============ QUILL EDITOR ============
+        var quill = new Quill('#quill-editor', {
+          theme: 'snow',
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline'],
+              [{ 'header': [1, 2, false] }],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              ['link'],
+              ['code-block'],
+              ['clean']
+            ]
+          }
+        });
+
+        // Update hidden input when content changes
+        quill.on('text-change', function() {
+          document.getElementById('body').value = quill.root.innerHTML;
         });
 
         // Pre-populate editor if there's saved content
-        const pellContentElement = document.querySelector('#pell .pell-content');
-        if(pellContentElement && document.getElementById('body').value){
-          pellContentElement.innerHTML = document.getElementById('body').value;
+        const savedContent = document.getElementById('body').value;
+        if(savedContent){
+          quill.root.innerHTML = savedContent;
         }
 
         // ============ DOMAIN FETCHING ============
@@ -378,12 +311,11 @@
         const sendBtn = document.getElementById('send_btn');
         const resetBtn = document.getElementById('reset_btn');
 
-        // Reset button handler (clears Pell editor too)
+        // Reset button handler (clears Quill editor too)
         resetBtn.addEventListener('click', function() {
           form.reset();
-          const pellContent = document.querySelector('#pell .pell-content');
-          if (pellContent) {
-            pellContent.innerHTML = '';
+          if (quill) {
+            quill.setContents([]);
           }
           document.getElementById('body').value = '';
           errorDiv.classList.add('hidden');
@@ -400,22 +332,21 @@
             errorDiv.textContent = '';
             messageContainer.innerHTML = ''; // Clear server-rendered messages
 
-            // 1. Sync Pell content to hidden body input
-            const pellContent = document.querySelector('#pell .pell-content');
-            if (!pellContent) {
-              console.error('Pell editor content area not found');
+            // 1. Get content from Quill editor
+            if (!quill) {
+              console.error('Quill editor not found');
               errorDiv.textContent = 'Error: Email editor not loaded correctly. Try refreshing the page.';
               errorDiv.classList.remove('hidden');
               return;
             }
-            const bodyHtml = pellContent.innerHTML;
+            const bodyHtml = quill.root.innerHTML;
             document.getElementById('body').value = bodyHtml;
             
             // 2. Non-blocking validation
-            if(!bodyHtml.trim()){
+            if(!quill.getText().trim()){
               errorDiv.textContent = 'Email body cannot be empty.';
               errorDiv.classList.remove('hidden');
-              pellContent.focus();
+              quill.focus();
               return;
             }
 
