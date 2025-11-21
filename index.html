@@ -312,16 +312,19 @@
         const resetBtn = document.getElementById('reset_btn');
 
         // Reset button handler (clears Quill editor too)
-        resetBtn.addEventListener('click', function() {
+        resetBtn.addEventListener('click', function(e) {
+          e.preventDefault();
           form.reset();
           if (quill) {
             quill.setContents([]);
-            // Refocus the editor after reset
-            setTimeout(() => quill.focus(), 100);
+            // Immediately focus the editor and prevent button from staying focused
+            quill.focus();
           }
           document.getElementById('body').value = '';
           errorDiv.classList.add('hidden');
           messageContainer.innerHTML = '';
+          // Remove focus from the reset button
+          this.blur();
         });
 
         if(form){
