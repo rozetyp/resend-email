@@ -232,10 +232,38 @@
             'bold',
             'italic',
             'underline',
-            'heading1',
-            'heading2',
-            'olist',
-            'ulist',
+            {
+              name: 'heading1',
+              icon: 'H1',
+              title: 'Heading 1',
+              result: function() {
+                window.pell.exec('formatBlock', '<h1>');
+              }
+            },
+            {
+              name: 'heading2',
+              icon: 'H2',
+              title: 'Heading 2',
+              result: function() {
+                window.pell.exec('formatBlock', '<h2>');
+              }
+            },
+            {
+              name: 'olist',
+              icon: '#',
+              title: 'Ordered List',
+              result: function() {
+                window.pell.exec('insertOrderedList');
+              }
+            },
+            {
+              name: 'ulist',
+              icon: '•',
+              title: 'Unordered List',
+              result: function() {
+                window.pell.exec('insertUnorderedList');
+              }
+            },
             {
               name: 'link',
               icon: '🔗',
