@@ -257,12 +257,6 @@
           document.getElementById('body').value = quill.root.innerHTML;
         });
 
-        // Pre-populate editor if there's saved content
-        const savedContent = document.getElementById('body').value;
-        if(savedContent){
-          quill.root.innerHTML = savedContent;
-        }
-
         // ============ DOMAIN FETCHING ============
         const fetchDomainsBtn = document.getElementById('fetch_domains_btn');
         const domainsList = document.getElementById('domains_list');
@@ -404,8 +398,6 @@
             const subject = document.getElementById('subject').value;
             const body = document.getElementById('body').value;
 
-            console.log('Form data:', { apiKey: '***', from, to, cc, bcc, subject, bodyLength: body.length });
-
             if (!apiKey) {
               errorDiv.textContent = 'API Key cannot be empty.';
               errorDiv.classList.remove('hidden');
@@ -430,9 +422,6 @@
               if (cc) payload.cc = [cc];
               if (bcc) payload.bcc = [bcc];
 
-              console.log('Sending to Resend API...');
-              console.log('Payload:', payload);
-
               // 6. Send via API proxy to Resend
               const response = await fetch(`${API_URL}/api/send`, {
                 method: 'POST',
@@ -443,10 +432,7 @@
                 body: JSON.stringify(payload)
               });
 
-              console.log('Response status:', response.status);
-
               const data = await response.json();
-              console.log('Response data:', data);
 
               if (!response.ok) {
                 // Handle API errors (e.g., validation, auth)
@@ -467,37 +453,28 @@
               `;
               
             } catch (error) {
-              // 8. Show failure message with actionable guidance
+              // Show failure message with actionable guidance
               let errorMsg = error.message;
               
-              console.error('Send error:', error);
-              
-              // Provide context-specific help
               if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
                 errorMsg += ' → Check your API key at https://resend.com/api-keys';
               } else if (errorMsg.includes('invalid_from_address') || errorMsg.includes('from')) {
                 errorMsg += ' → "From" email must be verified in your Resend account';
               } else if (errorMsg.includes('invalid_to_address') || errorMsg.includes('to')) {
                 errorMsg += ' → "To" email address is invalid';
-              } else if (errorMsg.includes('missing_required_parameters')) {
-                errorMsg += ' → All fields are required (Subject, To, From, Body)';
               }
               
               messageContainer.innerHTML = `
                 <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
                   <span class="font-medium">❌ Send Failed:</span>
                   <div class="mt-1 text-xs">${errorMsg}</div>
-                  <div class="mt-2 text-xs text-gray-600">Debug: Check the browser console (F12) for more details.</div>
                 </div>
               `;
             } finally {
-              // 9. Reset button state
               sendBtn.disabled = false;
               sendBtn.textContent = 'Send Email';
             }
           });
-        } else {
-          console.error('Form element not found');
         }
       });
     </script>
