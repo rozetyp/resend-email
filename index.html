@@ -114,6 +114,19 @@
             </div>
           </div>
 
+          <!-- FROM NAME -->
+          <div class="mb-5">
+            <label for="from_name" class="block mb-2 text-sm font-medium text-gray-900">From Name <span class="text-gray-400 font-normal">(optional)</span></label>
+            <input 
+              id="from_name" 
+              name="from_name" 
+              type="text" 
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+              placeholder="John Smith"
+            />
+            <p class="mt-1 text-xs text-gray-500">Display name shown to recipients.</p>
+          </div>
+
           <!-- FROM EMAIL -->
           <div class="mb-5">
             <label for="from_email" class="block mb-2 text-sm font-medium text-gray-900">From Email</label>
@@ -146,6 +159,30 @@
               required 
             />
             <p class="mt-1 text-xs text-gray-500">Single recipient email address.</p>
+          </div>
+
+          <!-- CC / BCC -->
+          <div class="mb-5 flex gap-4">
+            <div class="flex-1">
+              <label for="cc" class="block mb-2 text-sm font-medium text-gray-900">CC <span class="text-gray-400 font-normal">(optional)</span></label>
+              <input 
+                id="cc" 
+                name="cc" 
+                type="email" 
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="cc@example.com"
+              />
+            </div>
+            <div class="flex-1">
+              <label for="bcc" class="block mb-2 text-sm font-medium text-gray-900">BCC <span class="text-gray-400 font-normal">(optional)</span></label>
+              <input 
+                id="bcc" 
+                name="bcc" 
+                type="email" 
+                class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                placeholder="bcc@example.com"
+              />
+            </div>
           </div>
 
           <!-- SUBJECT -->
@@ -357,12 +394,16 @@
 
             // 3. Get all form data
             const apiKey = document.getElementById('api_key').value;
-            const from = document.getElementById('from_email').value;
+            const fromName = document.getElementById('from_name').value.trim();
+            const fromEmail = document.getElementById('from_email').value;
+            const from = fromName ? `"${fromName}" <${fromEmail}>` : fromEmail;
             const to = document.getElementById('to_email').value;
+            const cc = document.getElementById('cc').value.trim();
+            const bcc = document.getElementById('bcc').value.trim();
             const subject = document.getElementById('subject').value;
             const body = document.getElementById('body').value;
 
-            console.log('Form data:', { apiKey: '***', from, to, subject, bodyLength: body.length });
+            console.log('Form data:', { apiKey: '***', from, to, cc, bcc, subject, bodyLength: body.length });
 
             if (!apiKey) {
               errorDiv.textContent = 'API Key cannot be empty.';
@@ -379,10 +420,14 @@
               // 5. Construct API request
               const payload = {
                 from: from,
-                to: [to], // Resend API expects 'to' as an array
+                to: [to],
                 subject: subject,
                 html: body
               };
+              
+              // Add optional CC/BCC if provided
+              if (cc) payload.cc = [cc];
+              if (bcc) payload.bcc = [bcc];
 
               console.log('Sending to Resend API...');
               console.log('Payload:', payload);
