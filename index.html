@@ -163,12 +163,11 @@
 
           <!-- CC -->
           <div class="mb-5">
-            <label for="cc" class="block mb-2 text-sm font-medium text-gray-900">CC <span class="text-gray-400 font-normal">(optional)</span></label>
+            <label for="cc_email" class="block mb-2 text-sm font-medium text-gray-900">CC <span class="text-gray-400 font-normal">(optional)</span></label>
             <input 
-              id="cc" 
-              name="cc" 
+              id="cc_email" 
+              name="cc_email" 
               type="email" 
-              autocomplete="email"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="cc@example.com"
             />
@@ -176,12 +175,11 @@
 
           <!-- BCC -->
           <div class="mb-5">
-            <label for="bcc" class="block mb-2 text-sm font-medium text-gray-900">BCC <span class="text-gray-400 font-normal">(optional)</span></label>
+            <label for="bcc_email" class="block mb-2 text-sm font-medium text-gray-900">BCC <span class="text-gray-400 font-normal">(optional)</span></label>
             <input 
-              id="bcc" 
-              name="bcc" 
+              id="bcc_email" 
+              name="bcc_email" 
               type="email" 
-              autocomplete="email"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
               placeholder="bcc@example.com"
             />
@@ -400,8 +398,8 @@
             const fromEmail = document.getElementById('from_email').value;
             const from = fromName ? `"${fromName}" <${fromEmail}>` : fromEmail;
             const to = document.getElementById('to_email').value;
-            const cc = document.getElementById('cc').value.trim();
-            const bcc = document.getElementById('bcc').value.trim();
+            const cc = document.getElementById('cc_email').value.trim();
+            const bcc = document.getElementById('bcc_email').value.trim();
             const subject = document.getElementById('subject').value;
             const body = document.getElementById('body').value;
 
