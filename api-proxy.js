@@ -88,7 +88,7 @@ function handleSendEmail(req, res) {
       
       console.log('[SEND] Request received');
       console.log('[SEND] API Key present:', !!apiKey);
-      console.log('[SEND] Payload:', JSON.stringify(data));
+      // Privacy: Do NOT log email content, recipients, or subjects
       
       if (!apiKey) {
         console.log('[SEND] ERROR: Missing API key');
@@ -121,7 +121,7 @@ function handleSendEmail(req, res) {
         });
         
         resendRes.on('end', () => {
-          console.log('[SEND] Resend response body:', responseBody);
+          console.log('[SEND] Email sent successfully');
           res.writeHead(resendRes.statusCode, {
             'Content-Type': 'application/json',
             'Access-Control-Allow-Origin': '*'
@@ -181,7 +181,7 @@ function handleGetDomains(req, res) {
     });
     
     resendRes.on('end', () => {
-      console.log('[DOMAINS] Resend response body:', body);
+      console.log('[DOMAINS] Domains fetched successfully');
       res.writeHead(resendRes.statusCode, {
         'Content-Type': 'application/json',
         'Access-Control-Allow-Origin': '*'

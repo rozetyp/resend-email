@@ -2,22 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Resend Pad – Free Email Editor | Send Without Code</title>
+  <title>Resend Pad – Free Resend Email Editor & GUI | Test & Send Emails Without Code</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="description" content="Free email editor for Resend. Paste your API key, load verified domains, compose and send emails without code. No storage, no tracking." />
-  <meta name="keywords" content="Resend email editor, send email without code, free email tool, BYOK email, Resend API UI, no-code email" />
+  <meta name="description" content="Free web-based GUI for Resend API. Test and send transactional emails, HTML email editor, load verified domains, no code required. BYOK, no storage, no tracking. Perfect for testing and development." />
+  <meta name="keywords" content="Resend email editor, Resend GUI, Resend web interface, send email without code, send email from custom domain, send email from your domain, professional email sender, branded email sending, free email tool, BYOK email, Resend API UI, no-code email, email testing tool, test Resend API, Resend playground, transactional email sender, email API tester, HTML email composer, rich text email editor, browser email sender, verify email sending, custom domain email, domain email sender, SendGrid alternative, Mailgun alternative" />
   <meta name="author" content="Resend Pad" />
   <meta name="robots" content="index, follow" />
   <meta property="og:title" content="Resend Pad – Send Emails Without Code" />
   <meta property="og:description" content="Free email editor for Resend. Paste key, load domains, compose, send. No storage." />
   <meta property="og:type" content="website" />
   <meta property="og:url" content="https://resendpad.up.railway.app" />
+  <meta property="og:image" content="https://resendpad.up.railway.app/og-image.png" />
   <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:image" content="https://resendpad.up.railway.app/og-image.png" />
   <meta name="twitter:title" content="Resend Pad – Send Emails Without Code" />
   <meta name="twitter:description" content="Free email editor for Resend. No code, no storage, no tracking." />
   <meta name="google-site-verification" content="RqTkgBU8WKBxrFgDaU4OTdzd2EdYXZ_YMjoOkhOGVdU" />
   <link rel="canonical" href="https://resendpad.up.railway.app" />
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75' font-weight='bold' fill='%232563eb'>P</text></svg>" />
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Quill Rich Text Editor CSS -->
@@ -79,16 +84,9 @@
     
     <div class="w-full max-w-3xl bg-white text-gray-900 rounded-xl shadow-2xl p-6 sm:p-8 mt-16">
       
-      <div class="flex items-center justify-center mb-2 gap-3">
-        <h1 class="text-3xl font-bold text-center text-gray-900">
-          Resend Pad
-        </h1>
-        <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" title="View source on GitHub" class="text-gray-400 hover:text-gray-700 transition-colors">
-          <svg class="w-7 h-7" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
-            <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.91 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.085 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-          </svg>
-        </a>
-      </div>
+      <h1 class="text-3xl font-bold text-center text-gray-900 mb-2">
+        Resend Pad
+      </h1>
       
       <p class="text-center text-sm text-gray-600 mb-6">
         Send emails with Resend using your own API key. No server relay. Built for developers.
@@ -253,9 +251,29 @@
         });
 
         // Update hidden input when content changes
+        // Also sanitize HTML for email clients (reduce spacing issues)
         quill.on('text-change', function() {
-          document.getElementById('body').value = quill.root.innerHTML;
+          let html = quill.root.innerHTML;
+          // Clean up Quill's HTML for better email rendering
+          html = sanitizeForEmail(html);
+          document.getElementById('body').value = html;
         });
+        
+        // Sanitize HTML for email clients
+        function sanitizeForEmail(html) {
+          // Remove default Quill paragraph spacing by adding inline styles
+          html = html.replace(/<p>/g, '<p style="margin: 0 0 10px 0; padding: 0;">');
+          html = html.replace(/<h1>/g, '<h1 style="margin: 16px 0 8px 0; padding: 0; font-size: 32px; font-weight: bold;">');
+          html = html.replace(/<h2>/g, '<h2 style="margin: 14px 0 7px 0; padding: 0; font-size: 24px; font-weight: bold;">');
+          html = html.replace(/<ul>/g, '<ul style="margin: 10px 0; padding-left: 30px;">');
+          html = html.replace(/<ol>/g, '<ol style="margin: 10px 0; padding-left: 30px;">');
+          html = html.replace(/<li>/g, '<li style="margin: 0 0 5px 0;">');
+          html = html.replace(/<pre/g, '<pre style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;"');
+          // Remove empty paragraphs that create extra space
+          html = html.replace(/<p><br><\/p>/g, '');
+          html = html.replace(/<p>\s*<\/p>/g, '');
+          return html;
+        }
 
         // ============ DOMAIN FETCHING ============
         const fetchDomainsBtn = document.getElementById('fetch_domains_btn');
@@ -369,14 +387,14 @@
             errorDiv.textContent = '';
             messageContainer.innerHTML = ''; // Clear server-rendered messages
 
-            // 1. Get content from Quill editor
+            // 1. Get content from Quill editor and sanitize for email
             if (!quill) {
               console.error('Quill editor not found');
               errorDiv.textContent = 'Error: Email editor not loaded correctly. Try refreshing the page.';
               errorDiv.classList.remove('hidden');
               return;
             }
-            const bodyHtml = quill.root.innerHTML;
+            const bodyHtml = sanitizeForEmail(quill.root.innerHTML);
             document.getElementById('body').value = bodyHtml;
             
             // 2. Non-blocking validation
@@ -481,6 +499,11 @@
     
     <!-- FOOTER -->
     <div class="mt-12 pt-8 pb-4 border-t border-gray-200 text-center text-xs text-gray-500">
+      <div class="mb-3">
+        <a href="/landing.html" class="text-blue-600 hover:underline">About Resend Pad</a>
+        ·
+        <a href="/" class="text-blue-600 hover:underline">Email Editor</a>
+      </div>
       Made by 
       <a href="mailto:rozetyp@gmail.com" class="text-blue-600 hover:underline">rozetyp</a>
       · 
