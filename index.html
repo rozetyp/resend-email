@@ -184,17 +184,78 @@
             />
           </div>
 
-          <!-- SUBJECT -->
+          <!-- SUBJECT & THREADING -->
           <div class="mb-5">
             <label for="subject" class="block mb-2 text-sm font-medium text-gray-900">Subject</label>
-            <input 
-              id="subject" 
-              name="subject" 
-              type="text" 
-              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="Your subject line" 
-              required 
-            />
+            <div class="flex flex-col sm:flex-row gap-2">
+                <input 
+                  id="subject" 
+                  name="subject" 
+                  type="text" 
+                  class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 transition-shadow"
+                  placeholder="Your subject line" 
+                  required 
+                />
+                <button type="button" id="toggle_reply_btn" class="flex-shrink-0 text-gray-900 bg-white border border-gray-300 focus:outline-none hover:bg-gray-100 focus:ring-4 focus:ring-gray-100 font-medium rounded-lg text-sm px-4 py-2.5 whitespace-nowrap">
+                    <span id="toggle_reply_text">Connect Thread</span>
+                </button>
+            </div>
+
+            <!-- HIDDEN THREADING SECTION -->
+            <div id="reply_section" class="hidden mt-3 transition-all duration-300 ease-in-out">
+              <!-- STATE 1: INPUT AREA -->
+              <div id="reply_input_area">
+                  <div class="relative">
+                    <textarea 
+                        id="raw_headers" 
+                        rows="3"
+                        class="bg-white border border-gray-200 text-gray-600 text-xs rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-3 font-mono shadow-sm hover:border-gray-300 transition-colors resize-y"
+                        placeholder="Paste original email headers here..."
+                    ></textarea>
+                    <div class="absolute bottom-2 right-2 text-[10px] text-gray-300 pointer-events-none font-medium uppercase tracking-wider">
+                        Auto-detect
+                    </div>
+                  </div>
+                  <p class="mt-1 text-xs text-gray-500">
+                    Paste from Gmail's <strong>Show original</strong> to auto-fill context.
+                  </p>
+                  
+                  <!-- Error feedback -->
+                  <div id="extract_error" class="hidden mt-1 text-xs text-red-600 font-medium pl-1">
+                    <span id="extract_error_msg"></span>
+                  </div>
+              </div>
+
+              <!-- STATE 2: SUCCESS CARD -->
+              <div id="thread_summary_card" class="hidden">
+                  <div class="flex items-center justify-between p-2 pl-3 bg-gray-50 border border-gray-200 rounded-md">
+                      <div class="flex items-center gap-3 overflow-hidden">
+                          <div class="flex-shrink-0 text-blue-500">
+                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd" d="M12.586 4.586a2 2 0 112.828 2.828l-3 3a2 2 0 01-2.828 0 1 1 0 00-1.414 1.414 4 4 0 005.656 0l3-3a4 4 0 00-5.656-5.656l-1.5 1.5a1 1 0 101.414 1.414l1.5-1.5zm-5 5a2 2 0 012.828 0 1 1 0 101.414-1.414 4 4 0 00-5.656 0l-3 3a4 4 0 105.656 5.656l1.5-1.5a1 1 0 10-1.414-1.414l-1.5 1.5a2 2 0 11-2.828-2.828l3-3z" clip-rule="evenodd" />
+                              </svg>
+                          </div>
+                          <div class="min-w-0 flex flex-col">
+                              <span class="text-xs font-semibold text-gray-700">Thread Linked: <span id="summary_subject" class="font-normal text-gray-500">...</span></span>
+                              <div class="flex items-center gap-1 text-[10px] text-gray-400 font-mono">
+                                  <span id="summary_to" class="truncate max-w-[150px]">...</span>
+                                  <span class="mx-1 opacity-50">•</span>
+                                  <span id="summary_id" class="opacity-75">...</span>
+                              </div>
+                          </div>
+                      </div>
+                      <button type="button" id="reset_thread_btn" class="ml-2 p-1 text-gray-400 hover:text-red-500 rounded transition-colors" title="Disconnect">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                      </button>
+                  </div>
+              </div>
+
+              <!-- Hidden fields -->
+              <input type="hidden" id="in_reply_to">
+              <input type="hidden" id="references">
+            </div>
           </div>
 
           <!-- EMAIL BODY (QUILL EDITOR) -->
@@ -354,6 +415,255 @@
           }
         });
 
+        // ============ REPLY THREADING HELPER ============
+        // Toggle reply section
+        document.getElementById('toggle_reply_btn').addEventListener('click', function() {
+          const section = document.getElementById('reply_section');
+          const text = document.getElementById('toggle_reply_text');
+          const isHidden = section.classList.contains('hidden');
+          
+          if (isHidden) {
+            section.classList.remove('hidden');
+            text.textContent = 'Cancel';
+          } else {
+            section.classList.add('hidden');
+            text.textContent = 'Connect Thread';
+          }
+        });
+
+        const rawHeadersInput = document.getElementById('raw_headers');
+        const replyInputArea = document.getElementById('reply_input_area');
+        const threadSummaryCard = document.getElementById('thread_summary_card');
+        const errorEl = document.getElementById('extract_error');
+        const errorMsg = document.getElementById('extract_error_msg');
+
+        // Auto-detect headers on paste with debounce
+        rawHeadersInput.addEventListener('input', debounce(function(e) {
+            const content = this.value;
+            // Simple heuristic: does it look like email headers?
+            if (content.length > 20 && (content.match(/Message-ID:/i) || (content.match(/From:/i) && content.match(/Subject:/i)))) {
+                extractHeaders(e);
+            }
+        }, 500));
+
+        // Reset Threading Button
+        document.getElementById('reset_thread_btn').addEventListener('click', function() {
+            // 1. Clear Data (Threading + Visible Fields)
+            document.getElementById('in_reply_to').value = '';
+            document.getElementById('references').value = '';
+            document.getElementById('subject').value = '';
+            document.getElementById('to_email').value = '';
+            rawHeadersInput.value = '';
+            
+            // 2. Remove the auto-generated quote from Editor
+            if (quill) {
+                let html = quill.root.innerHTML;
+                // Regex to match the standard quote block we inserted
+                // Matches: <p><br></p><p>On ... wrote:</p><blockquote ...>...</blockquote><p><br></p>
+                // We make it slightly flexible to catch variations
+                const quoteRegex = /<p>On .*? wrote:<\/p><blockquote[^>]*>.*?<\/blockquote>/i;
+                const brRegex = /<p><br><\/p>/g;
+                
+                if (html.match(quoteRegex)) {
+                   html = html.replace(quoteRegex, '');
+                   // Clean up potential double-spacing left behind
+                   html = html.replace(/<p><br><\/p><p><br><\/p>/g, '<p><br></p>'); 
+                   quill.root.innerHTML = html;
+                }
+            }
+            
+            // 3. Toggle UI State
+            threadSummaryCard.classList.add('hidden');
+            replyInputArea.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            
+            // 4. Focus back on headers input
+            rawHeadersInput.focus();
+        });
+
+        function extractHeaders(e) {
+          const rawHeaders = rawHeadersInput.value;
+          
+          // Hide previous error
+          errorEl.classList.add('hidden');
+          
+          if (!rawHeaders.trim()) return;
+          
+          // SAFETY: Prevent ReDoS or freezing on massive pastes
+          if (rawHeaders.length > 50000) {
+              errorMsg.textContent = 'Input too large. Please paste only the headers.';
+              errorEl.classList.remove('hidden');
+              return;
+          }
+          
+          try {
+            // 1. Try strict parsing first
+            let headers = parseEmailHeaders(rawHeaders);
+            
+            // 2. Fallback to smart fuzzy search if key fields are missing
+            if (!headers['message-id']) {
+                headers = smartParseHeaders(rawHeaders, headers);
+            }
+            
+            // Extract values
+            const messageId = headers['message-id'];
+            const references = headers['references'];
+            const from = headers['from'] || headers['reply-to'];
+            const subject = headers['subject'];
+            const date = headers['date'];
+            
+            // Validate minimum required field
+            if (!messageId) {
+               // Silent fail on auto-type, strict on manual? 
+               // Since we only have auto-type now, we only throw if it looked like a real attempt
+               if(rawHeaders.length > 100) throw new Error('Could not find Message-ID. Paste full headers.');
+               return;
+            }
+            
+            // Set threading headers (hidden fields)
+            document.getElementById('in_reply_to').value = messageId;
+            document.getElementById('references').value = references ? `${references} ${messageId}` : messageId;
+            
+            // Auto-fill To field
+            let toEmail = '';
+            let fromName = '';
+            if (from) {
+              toEmail = extractEmailAddress(from);
+              fromName = extractName(from);
+              if (toEmail) document.getElementById('to_email').value = toEmail;
+            }
+            
+            // Auto-fill Subject with Re: prefix
+            let reSubject = '';
+            if (subject) {
+              reSubject = subject.toLowerCase().startsWith('re:') ? subject : `Re: ${subject}`;
+              document.getElementById('subject').value = reSubject;
+            }
+
+            // "Reply Quote" Generator
+            if (date && from && quill) {
+                const cleanDate = formatDateForQuote(date);
+                const quoteHeader = `<p><br></p><p>On ${cleanDate}, ${fromName || toEmail} wrote:</p><blockquote style="border-left: 2px solid #ccc; padding-left: 10px; margin-left: 5px; color: #666;">...</blockquote><p><br></p>`;
+                
+                if (quill.getText().trim().length === 0) {
+                     quill.clipboard.dangerouslyPasteHTML(0, quoteHeader);
+                }
+            }
+            
+            // UPDATE UI STATE: Success
+            document.getElementById('summary_subject').textContent = reSubject || '(No Subject)';
+            document.getElementById('summary_to').textContent = toEmail || '(Unknown)';
+            document.getElementById('summary_id').textContent = `ID: ${messageId.substring(0, 25)}...`;
+            
+            // Switch Views
+            replyInputArea.classList.add('hidden');
+            threadSummaryCard.classList.remove('hidden');
+            
+            // Focus on editor
+            setTimeout(() => { if (quill) quill.focus(); }, 300);
+            
+          } catch (error) {
+             errorMsg.textContent = error.message;
+             errorEl.classList.remove('hidden');
+          }
+        }
+
+        // Helper: Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function() {
+                const context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), wait);
+            };
+        }
+
+        // Smart Regex Parser (Fallback)
+        function smartParseHeaders(raw, existingHeaders) {
+            const headers = { ...existingHeaders };
+            // Improved regex to handle both multi-line and single-line (messy) pastes
+            // Uses lookahead to stop at the next common header or end of string
+            const commonHeaders = 'Message-ID:|Subject:|From:|Date:|To:|References:';
+            const patterns = {
+                'message-id': /Message-ID:\s*(<[^>]+>)/i,
+                'subject': new RegExp(`Subject:\\s*(.*?)(?=\\s*(?:${commonHeaders}|$))`, 'i'),
+                'from': new RegExp(`From:\\s*(.*?)(?=\\s*(?:${commonHeaders}|$))`, 'i'),
+                'date': new RegExp(`Date:\\s*(.*?)(?=\\s*(?:${commonHeaders}|$))`, 'i'),
+                'references': new RegExp(`References:\\s*(.*?)(?=\\s*(?:${commonHeaders}|$))`, 'i')
+            };
+
+            for (const [key, regex] of Object.entries(patterns)) {
+                if (!headers[key]) {
+                    const match = raw.match(regex);
+                    if (match && match[1]) {
+                        headers[key] = match[1].trim();
+                    }
+                }
+            }
+            return headers;
+        }
+        
+        // Parse email headers (Strict)
+        function parseEmailHeaders(raw) {
+          const headers = {};
+          const lines = raw.split('\n');
+          let currentHeader = '';
+          let currentValue = '';
+          
+          for (let line of lines) {
+            // Check if line starts with whitespace (continuation of previous header)
+            if (line.match(/^\s/) && currentHeader) {
+              currentValue += ' ' + line.trim();
+            } else {
+              // Save previous header if exists
+              if (currentHeader) {
+                headers[currentHeader.toLowerCase()] = currentValue.trim();
+              }
+              
+              // Parse new header
+              const match = line.match(/^([^:]+):\s*(.*)$/);
+              if (match) {
+                currentHeader = match[1];
+                currentValue = match[2];
+              } else {
+                currentHeader = '';
+                currentValue = '';
+              }
+            }
+          }
+          
+          // Save last header
+          if (currentHeader) {
+            headers[currentHeader.toLowerCase()] = currentValue.trim();
+          }
+          
+          return headers;
+        }
+        
+        // Extract email address from "Name <email@example.com>" format
+        function extractEmailAddress(str) {
+          const match = str.match(/<([^>]+)>/);
+          if (match) return match[1];
+          // If no brackets, check if it's just an email
+          if (str.includes('@')) return str.trim();
+          return '';
+        }
+
+        // Extract name from "Name <email@example.com>"
+        function extractName(str) {
+            const match = str.match(/^"?([^"<]+)"?\s*</);
+            return match ? match[1].trim() : str.split('@')[0];
+        }
+
+        // Format date for quote line
+        function formatDateForQuote(dateStr) {
+            try {
+                const d = new Date(dateStr);
+                // format: Mon, Jan 2, 2023 at 3:04 PM
+                return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+            } catch(e) { return dateStr; }
+        }
+
         // ============ FORM SUBMISSION ============
         const form = document.getElementById('send_form');
         const errorDiv = document.getElementById('error-message');
@@ -439,6 +749,16 @@
               // Add optional CC/BCC if provided
               if (cc) payload.cc = [cc];
               if (bcc) payload.bcc = [bcc];
+              
+              // Add threading headers if replying to a thread
+              const inReplyTo = document.getElementById('in_reply_to').value.trim();
+              const references = document.getElementById('references').value.trim();
+              if (inReplyTo || references) {
+                payload.headers = {};
+                if (inReplyTo) payload.headers['In-Reply-To'] = inReplyTo;
+                if (references) payload.headers['References'] = references;
+                else if (inReplyTo) payload.headers['References'] = inReplyTo; // fallback
+              }
 
               // 6. Send via API proxy to Resend
               const response = await fetch(`${API_URL}/api/send`, {

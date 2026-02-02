@@ -51,6 +51,15 @@ node api-proxy.js
 - **SEO Landing Page**: Dedicated page at `/landing.html` to drive organic search traffic  
 - **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
 
+## New Feature: Seamless Threading (Reply Flow)
+
+Resend Pad now supports replying to existing email threads (Gmail/Outlook compatible):
+
+1.  **Connect Thread**: Click the "Connect Thread" button next to the Subject field.
+2.  **Auto-Detect**: Paste headers from "Show original" into the box. The app automatically links the thread and sets the reply context.
+3.  **Reply Quote**: A standard "On [Date]..." quote is inserted into the body.
+4.  **Disconnect**: Click the X to unlink and clear the context if needed.
+
 ## Security
 
 - **Your API key never leaves your control** – Sent directly to Resend's API in the Authorization header. We don't store, log, or persist it.
