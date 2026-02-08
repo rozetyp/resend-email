@@ -44,21 +44,40 @@ node api-proxy.js
 
 - **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, code blocks, and clean formatting using Quill.js
 - **Domain Loader**: Fetch verified sender domains directly from your Resend account with one click
+- **Reply Threading**: Reply to existing email threads with proper Message-ID and References headers (Gmail/Outlook compatible)
 - **Reset Function**: Clear all form fields and editor content with Reset button that properly returns focus to editor
 - **Batch Sending**: Reuse form values – just change the recipient email for each send
 - **Clear Error Messages**: Know exactly why a send failed (invalid domain, auth errors, etc.)
 - **Mobile Friendly**: Works on desktop, tablet, and mobile browsers
 - **SEO Landing Page**: Dedicated page at `/landing.html` to drive organic search traffic  
 - **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
+- **Email-Optimized HTML**: Automatically adds inline styles to fix spacing issues in Gmail/Outlook
 
-## New Feature: Seamless Threading (Reply Flow)
+## Reply to Email Threads
 
-Resend Pad now supports replying to existing email threads (Gmail/Outlook compatible):
+**New in v2.0:** Reply to emails and keep them in the same conversation thread.
 
-1.  **Connect Thread**: Click the "Connect Thread" button next to the Subject field.
-2.  **Auto-Detect**: Paste headers from "Show original" into the box. The app automatically links the thread and sets the reply context.
-3.  **Reply Quote**: A standard "On [Date]..." quote is inserted into the body.
-4.  **Disconnect**: Click the X to unlink and clear the context if needed.
+**How it works:**
+
+1. Open the original email in Gmail
+2. Click **⋮** (three dots) → **Show original**
+3. Copy all text (Ctrl+A, Ctrl+C or Cmd+A, Cmd+C)
+4. In Resend Pad, click **"+ Show"** under "Reply to Thread"
+5. Paste into the text area and click **"Extract & Auto-Fill"**
+6. The form automatically fills:
+   - **To** field (sender's email)
+   - **Subject** (with "Re: " prefix)
+   - **Threading headers** (Message-ID, References)
+7. Type your reply and send!
+
+Your reply will appear in the same conversation thread for both you and the recipient.
+
+**Works with:**
+- ✅ Gmail
+- ✅ Outlook / Office 365
+- ✅ Apple Mail
+- ✅ Thunderbird
+- ✅ Most email clients that support RFC 2822 threading
 
 ## Security
 
@@ -170,8 +189,8 @@ Browser                    Your Server (api-proxy.js)       Resend API
 **Why a proxy?**
 - Resend API doesn't support CORS from browsers
 - Proxy handles CORS transparently
-- API key is passed through, never exposed to browser
-- All requests logged on server for debugging
+- API key is passed through, never stored or logged
+- Request status logged only (no email content, recipients, or subjects)
 
 ## Privacy
 
