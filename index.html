@@ -150,38 +150,40 @@
           <div class="mb-5">
             <label for="to_email" class="block mb-2 text-sm font-medium text-gray-900">To Email</label>
             <input 
-              id="to_email" 
-              name="to_email" 
-              type="email" 
+              id="to_email"
+              name="to_email"
+              type="text"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="recipient@example.com" 
-              required 
+              placeholder="recipient@example.com, another@example.com"
+              required
             />
-            <p class="mt-1 text-xs text-gray-500">Single recipient email address.</p>
+            <div id="to_indicator" class="mt-1 text-xs text-gray-500">Comma-separated for multiple recipients.</div>
           </div>
 
           <!-- CC -->
           <div class="mb-5">
             <label for="cc_email" class="block mb-2 text-sm font-medium text-gray-900">CC <span class="text-gray-400 font-normal">(optional)</span></label>
-            <input 
-              id="cc_email" 
-              name="cc_email" 
-              type="email" 
+            <input
+              id="cc_email"
+              name="cc_email"
+              type="text"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="cc@example.com"
+              placeholder="cc@example.com, another@example.com"
             />
+            <div id="cc_indicator" class="mt-1 text-xs text-gray-500"></div>
           </div>
 
           <!-- BCC -->
           <div class="mb-5">
             <label for="bcc_email" class="block mb-2 text-sm font-medium text-gray-900">BCC <span class="text-gray-400 font-normal">(optional)</span></label>
-            <input 
-              id="bcc_email" 
-              name="bcc_email" 
-              type="email" 
+            <input
+              id="bcc_email"
+              name="bcc_email"
+              type="text"
               class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
-              placeholder="bcc@example.com"
+              placeholder="bcc@example.com, another@example.com"
             />
+            <div id="bcc_indicator" class="mt-1 text-xs text-gray-500"></div>
           </div>
 
           <!-- SUBJECT & THREADING -->
@@ -265,6 +267,18 @@
             <input type="hidden" id="body" name="body" value="" />
           </div>
 
+          <!-- ATTACHMENTS -->
+          <div class="mb-5">
+            <label for="attachments" class="block mb-2 text-sm font-medium text-gray-900">Attachments <span class="text-gray-400 font-normal">(optional)</span></label>
+            <input
+              id="attachments"
+              type="file"
+              multiple
+              class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2"
+            />
+            <p class="mt-1 text-xs text-gray-500">Multiple files allowed.</p>
+          </div>
+
           <!-- JS-controlled ERROR/SUCCESS ALERTS -->
           <div id="message_container">
             <!-- JS will inject success/error messages here -->
@@ -323,7 +337,7 @@
         // Sanitize HTML for email clients
         function sanitizeForEmail(html) {
           // Remove default Quill paragraph spacing by adding inline styles
-          html = html.replace(/<p>/g, '<p style="margin: 0 0 10px 0; padding: 0;">');
+          html = html.replace(/<p>/g, '<p style="margin: 0; padding: 0;">');
           html = html.replace(/<h1>/g, '<h1 style="margin: 16px 0 8px 0; padding: 0; font-size: 32px; font-weight: bold;">');
           html = html.replace(/<h2>/g, '<h2 style="margin: 14px 0 7px 0; padding: 0; font-size: 24px; font-weight: bold;">');
           html = html.replace(/<ul>/g, '<ul style="margin: 10px 0; padding-left: 30px;">');
@@ -414,6 +428,37 @@
             fetchDomainsBtn.textContent = 'Load Domains';
           }
         });
+
+        // ============ RECIPIENT INDICATORS ============
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+        function updateRecipientIndicator(inputId, indicatorId) {
+          const input = document.getElementById(inputId);
+          const indicator = document.getElementById(indicatorId);
+          input.addEventListener('input', function() {
+            const emails = this.value.split(',').map(e => e.trim()).filter(e => e);
+            if (emails.length === 0) {
+              indicator.textContent = '';
+              indicator.className = 'mt-1 text-xs text-gray-500';
+              return;
+            }
+            const invalid = emails.filter(e => !emailRegex.test(e));
+            if (invalid.length) {
+              indicator.textContent = `Invalid: ${invalid.join(', ')}`;
+              indicator.className = 'mt-1 text-xs text-red-500';
+            } else if (emails.length > 1) {
+              indicator.textContent = `${emails.length} recipients`;
+              indicator.className = 'mt-1 text-xs text-blue-600';
+            } else {
+              indicator.textContent = '';
+              indicator.className = 'mt-1 text-xs text-gray-500';
+            }
+          });
+        }
+
+        updateRecipientIndicator('to_email', 'to_indicator');
+        updateRecipientIndicator('cc_email', 'cc_indicator');
+        updateRecipientIndicator('bcc_email', 'bcc_indicator');
 
         // ============ REPLY THREADING HELPER ============
         // Toggle reply section
@@ -732,6 +777,15 @@
               document.getElementById('api_key').focus();
               return;
             }
+
+            // Validate email addresses
+            const allEmails = [to, cc, bcc].join(',').split(',').map(e => e.trim()).filter(e => e);
+            const invalidEmails = allEmails.filter(e => !emailRegex.test(e));
+            if (invalidEmails.length) {
+              errorDiv.textContent = `Invalid email: ${invalidEmails.join(', ')}`;
+              errorDiv.classList.remove('hidden');
+              return;
+            }
             
             // 4. Update UI to show sending state
             sendBtn.disabled = true;
@@ -739,16 +793,32 @@
 
             try {
               // 5. Construct API request
+              const splitEmails = str => str.split(',').map(e => e.trim()).filter(e => e);
+
               const payload = {
                 from: from,
-                to: [to],
+                to: splitEmails(to),
                 subject: subject,
                 html: body
               };
-              
-              // Add optional CC/BCC if provided
-              if (cc) payload.cc = [cc];
-              if (bcc) payload.bcc = [bcc];
+
+              const ccList = cc ? splitEmails(cc) : [];
+              const bccList = bcc ? splitEmails(bcc) : [];
+              if (ccList.length) payload.cc = ccList;
+              if (bccList.length) payload.bcc = bccList;
+
+              // Read attachments as base64
+              const fileInput = document.getElementById('attachments');
+              if (fileInput.files.length > 0) {
+                payload.attachments = await Promise.all(
+                  Array.from(fileInput.files).map(file => new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve({ filename: file.name, content: reader.result.split(',')[1] });
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                  }))
+                );
+              }
               
               // Add threading headers if replying to a thread
               const inReplyTo = document.getElementById('in_reply_to').value.trim();
