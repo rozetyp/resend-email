@@ -35,14 +35,17 @@ node api-proxy.js
 
 1. **Paste your API key** into the form (stored only in browser memory)
 2. **Load your verified domains** from Resend with "Load Domains" button (or enter From email manually)
-3. **Enter recipient email and subject**
+3. **Enter recipients and subject** – comma-separate multiple To/CC/BCC addresses
 4. **Compose your email** using the Quill rich text editor with formatting toolbar
-5. **Click Send** – your email is delivered via Resend immediately
-6. **Use Reset** to clear all fields and start fresh (focus returns to editor for easy typing)
+5. **Attach files** if needed – multiple files supported
+6. **Click Send** – your email is delivered via Resend immediately
+7. **Use Reset** to clear all fields and start fresh (focus returns to editor for easy typing)
 
 ## Features
 
 - **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, code blocks, and clean formatting using Quill.js
+- **File Attachments**: Attach multiple files to your emails. Files are base64-encoded client-side and sent via Resend's API.
+- **Multiple Recipients**: Send to multiple To/CC/BCC addresses using comma-separated emails with live validation
 - **Domain Loader**: Fetch verified sender domains directly from your Resend account with one click
 - **Reply Threading**: Reply to existing email threads with proper Message-ID and References headers (Gmail/Outlook compatible)
 - **Reset Function**: Clear all form fields and editor content with Reset button that properly returns focus to editor
