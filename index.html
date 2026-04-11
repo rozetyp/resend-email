@@ -87,11 +87,15 @@
       <h1 class="text-3xl font-bold text-center text-gray-900 mb-2">
         Resend Pad
       </h1>
-      
-      <p class="text-center text-sm text-gray-600 mb-6">
-        Send emails with Resend using your own API key. No server relay. Built for developers.
-      </p>
-      
+
+      <!-- TAB NAV -->
+      <div class="flex border-b border-gray-200 mb-6">
+        <button id="tab_compose" class="px-4 py-2 text-sm font-medium text-blue-600 border-b-2 border-blue-600">Compose</button>
+        <button id="tab_sent" class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700 border-b-2 border-transparent">Sent</button>
+      </div>
+
+      <!-- COMPOSE VIEW -->
+      <div id="view_compose">
       <div class="form-container">
         <form id="send_form">
           
@@ -298,6 +302,36 @@
           </div>
         </form>
       </div>
+      </div><!-- end view_compose -->
+
+      <!-- SENT VIEW -->
+      <div id="view_sent" class="hidden">
+        <div class="flex justify-between items-center mb-4">
+          <p class="text-sm text-gray-500">Emails sent from your Resend account.</p>
+          <button id="refresh_sent_btn" class="text-sm text-blue-600 hover:underline">Refresh</button>
+        </div>
+        <div id="sent_list">
+          <p class="text-sm text-gray-400 text-center py-8">Enter your API key and click Refresh to load sent emails.</p>
+        </div>
+      </div>
+
+      <!-- EMAIL DETAIL MODAL -->
+      <div id="email_modal" class="hidden fixed inset-0 bg-black bg-opacity-40 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col">
+          <div class="flex justify-between items-start p-4 border-b border-gray-200">
+            <div class="min-w-0 pr-4">
+              <p id="modal_subject" class="font-semibold text-gray-900"></p>
+              <p id="modal_to" class="text-xs text-gray-500 mt-1"></p>
+              <p id="modal_date" class="text-xs text-gray-400"></p>
+            </div>
+            <button id="modal_close" class="flex-shrink-0 text-gray-400 hover:text-gray-700 text-xl leading-none">✕</button>
+          </div>
+          <div class="flex-1 overflow-auto p-4">
+            <iframe id="modal_body" class="w-full h-full min-h-64 border-0" sandbox="allow-same-origin"></iframe>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 
@@ -885,6 +919,129 @@
           });
         }
       });
+
+      // ============ TABS ============
+      const tabCompose = document.getElementById('tab_compose');
+      const tabSent = document.getElementById('tab_sent');
+      const viewCompose = document.getElementById('view_compose');
+      const viewSent = document.getElementById('view_sent');
+
+      tabCompose.addEventListener('click', () => {
+        viewCompose.classList.remove('hidden');
+        viewSent.classList.add('hidden');
+        tabCompose.classList.add('text-blue-600', 'border-blue-600');
+        tabCompose.classList.remove('text-gray-500', 'border-transparent');
+        tabSent.classList.remove('text-blue-600', 'border-blue-600');
+        tabSent.classList.add('text-gray-500', 'border-transparent');
+      });
+
+      tabSent.addEventListener('click', () => {
+        viewCompose.classList.add('hidden');
+        viewSent.classList.remove('hidden');
+        tabSent.classList.add('text-blue-600', 'border-blue-600');
+        tabSent.classList.remove('text-gray-500', 'border-transparent');
+        tabCompose.classList.remove('text-blue-600', 'border-blue-600');
+        tabCompose.classList.add('text-gray-500', 'border-transparent');
+        loadSentEmails();
+      });
+
+      document.getElementById('refresh_sent_btn').addEventListener('click', loadSentEmails);
+
+      // Modal close
+      document.getElementById('modal_close').addEventListener('click', () => {
+        document.getElementById('email_modal').classList.add('hidden');
+      });
+      document.getElementById('email_modal').addEventListener('click', function(e) {
+        if (e.target === this) this.classList.add('hidden');
+      });
+
+      async function openEmailDetail(id) {
+        const apiKey = document.getElementById('api_key').value.trim();
+        const modal = document.getElementById('email_modal');
+        const modalBody = document.getElementById('modal_body');
+
+        document.getElementById('modal_subject').textContent = 'Loading...';
+        document.getElementById('modal_to').textContent = '';
+        document.getElementById('modal_date').textContent = '';
+        modalBody.srcdoc = '';
+        modal.classList.remove('hidden');
+
+        try {
+          const response = await fetch(`${API_URL}/api/email/${id}`, {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          });
+          const e = await response.json();
+
+          document.getElementById('modal_subject').textContent = e.subject || '(no subject)';
+          document.getElementById('modal_to').textContent = `To: ${Array.isArray(e.to) ? e.to.join(', ') : e.to}  ·  From: ${e.from}`;
+          document.getElementById('modal_date').textContent = new Date(e.created_at).toLocaleString();
+          modalBody.srcdoc = e.html || `<pre style="font-family:sans-serif;padding:16px;white-space:pre-wrap">${e.text || '(no content)'}</pre>`;
+        } catch (err) {
+          modalBody.srcdoc = `<p style="padding:16px;color:red">${err.message}</p>`;
+        }
+      }
+
+      async function loadSentEmails() {
+        const apiKey = document.getElementById('api_key').value.trim();
+        const sentList = document.getElementById('sent_list');
+
+        if (!apiKey) {
+          sentList.innerHTML = '<p class="text-sm text-red-500 text-center py-8">Enter your API key in the Compose tab first.</p>';
+          return;
+        }
+
+        sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Loading...</p>';
+
+        try {
+          const response = await fetch(`${API_URL}/api/sent`, {
+            headers: { 'Authorization': `Bearer ${apiKey}` }
+          });
+
+          const data = await response.json();
+
+          if (!response.ok) {
+            throw new Error(data.message || data.error || `Error ${response.status}`);
+          }
+
+          const emails = data.data || [];
+
+          if (emails.length === 0) {
+            sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">No sent emails found.</p>';
+            return;
+          }
+
+          const statusColor = s => ({
+            delivered: 'text-green-600', bounced: 'text-red-500', clicked: 'text-blue-600', opened: 'text-blue-500'
+          }[s] || 'text-gray-400');
+
+          sentList.innerHTML = `
+            <div class="divide-y divide-gray-100">
+              ${emails.map(e => `
+                <div class="py-3 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2 transition-colors" data-id="${e.id}">
+                  <div class="flex justify-between items-start gap-2">
+                    <div class="min-w-0">
+                      <p class="text-sm font-medium text-gray-900 truncate">${e.subject || '(no subject)'}</p>
+                      <p class="text-xs text-gray-500 truncate">To: ${Array.isArray(e.to) ? e.to.join(', ') : e.to}</p>
+                    </div>
+                    <div class="flex-shrink-0 text-right">
+                      <p class="text-xs ${statusColor(e.last_event)}">${e.last_event || 'sent'}</p>
+                      <p class="text-xs text-gray-400">${new Date(e.created_at).toLocaleDateString()}</p>
+                    </div>
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          `;
+
+          // Row click → open detail modal
+          sentList.querySelectorAll('[data-id]').forEach(row => {
+            row.addEventListener('click', () => openEmailDetail(row.dataset.id));
+          });
+        } catch (err) {
+          sentList.innerHTML = `<p class="text-sm text-red-500 text-center py-8">${err.message}</p>`;
+        }
+      }
+
     </script>
     
     <!-- FOOTER -->

@@ -34,6 +34,12 @@ const server = http.createServer((req, res) => {
   } else if (req.method === 'GET' && req.url === '/api/domains') {
     res.setHeader('Content-Type', 'application/json');
     handleGetDomains(req, res);
+  } else if (req.method === 'GET' && req.url.startsWith('/api/email/')) {
+    res.setHeader('Content-Type', 'application/json');
+    handleGetEmail(req, res);
+  } else if (req.method === 'GET' && req.url.startsWith('/api/sent')) {
+    res.setHeader('Content-Type', 'application/json');
+    handleGetSent(req, res);
   } else {
     // Serve static files (index.html for root)
     let filePath = req.url === '/' ? '/index.html' : req.url;
@@ -196,6 +202,77 @@ function handleGetDomains(req, res) {
     res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
   });
   
+  resendReq.end();
+}
+
+function handleGetEmail(req, res) {
+  const apiKey = req.headers.authorization?.replace('Bearer ', '');
+  if (!apiKey) {
+    res.writeHead(401);
+    res.end(JSON.stringify({ error: 'Missing API key' }));
+    return;
+  }
+
+  const emailId = req.url.replace('/api/email/', '');
+  const resendReq = https.request({
+    hostname: 'api.resend.com',
+    path: `/emails/${emailId}`,
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  }, (resendRes) => {
+    let body = '';
+    resendRes.on('data', chunk => { body += chunk; });
+    resendRes.on('end', () => {
+      res.writeHead(resendRes.statusCode, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(body);
+    });
+  });
+
+  resendReq.on('error', (error) => {
+    res.writeHead(500);
+    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
+  });
+
+  resendReq.end();
+}
+
+function handleGetSent(req, res) {
+  const apiKey = req.headers.authorization?.replace('Bearer ', '');
+
+  if (!apiKey) {
+    res.writeHead(401);
+    res.end(JSON.stringify({ error: 'Missing API key' }));
+    return;
+  }
+
+  const parsedUrl = new URL(req.url, `http://localhost`);
+  const page = parsedUrl.searchParams.get('page') || '1';
+
+  const resendReq = https.request({
+    hostname: 'api.resend.com',
+    path: `/emails?page=${page}`,
+    method: 'GET',
+    headers: { 'Authorization': `Bearer ${apiKey}` }
+  }, (resendRes) => {
+    let body = '';
+    resendRes.on('data', chunk => { body += chunk; });
+    resendRes.on('end', () => {
+      res.writeHead(resendRes.statusCode, {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*'
+      });
+      res.end(body);
+    });
+  });
+
+  resendReq.on('error', (error) => {
+    res.writeHead(500);
+    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
+  });
+
   resendReq.end();
 }
 
