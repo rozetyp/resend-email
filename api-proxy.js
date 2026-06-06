@@ -94,7 +94,10 @@ function handleSendEmail(req, res) {
       
       console.log('[SEND] Request received');
       console.log('[SEND] API Key present:', !!apiKey);
-      // Privacy: Do NOT log email content, recipients, or subjects
+      // Log threading headers for debugging (these are not PII)
+      if (data.headers) {
+        console.log('[SEND] Threading headers:', JSON.stringify(data.headers));
+      }
       
       if (!apiKey) {
         console.log('[SEND] ERROR: Missing API key');

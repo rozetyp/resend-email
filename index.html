@@ -223,7 +223,7 @@
                     </div>
                   </div>
                   <p class="mt-1 text-xs text-gray-500">
-                    Paste from Gmail's <strong>Show original</strong> to auto-fill context.
+                    Paste email headers (Gmail's <strong>Show original</strong>) or a Resend email JSON response.
                   </p>
                   
                   <!-- Error feedback -->
@@ -519,8 +519,10 @@
         // Auto-detect headers on paste with debounce
         rawHeadersInput.addEventListener('input', debounce(function(e) {
             const content = this.value;
-            // Simple heuristic: does it look like email headers?
-            if (content.length > 20 && (content.match(/Message-ID:/i) || (content.match(/From:/i) && content.match(/Subject:/i)))) {
+            // Heuristic: does it look like email headers OR a Resend JSON response?
+            const looksLikeHeaders = content.length > 20 && (content.match(/Message-ID:/i) || (content.match(/From:/i) && content.match(/Subject:/i)));
+            const looksLikeJson = content.trimStart().startsWith('{') && (content.includes('"message_id"') || content.includes('"message-id"'));
+            if (looksLikeHeaders || looksLikeJson) {
                 extractHeaders(e);
             }
         }, 500));
@@ -560,6 +562,59 @@
             rawHeadersInput.focus();
         });
 
+        // Parse Resend JSON API response into a normalized headers object
+        function parseResendJson(jsonStr) {
+          const obj = JSON.parse(jsonStr);
+          const headers = {};
+          
+          // Extract message_id (top-level or from nested headers)
+          const msgId = obj.message_id 
+            || (obj.headers && (obj.headers['message-id'] || obj.headers['Message-ID']));
+          if (msgId) {
+            headers['message-id'] = msgId.startsWith('<') ? msgId : `<${msgId}>`;
+          }
+          
+          // Extract from (top-level string)
+          if (obj.from) {
+            headers['from'] = obj.from;
+          } else if (obj.headers && obj.headers['from']) {
+            headers['from'] = obj.headers['from'];
+          }
+          
+          // Extract to (array or string)
+          if (obj.to) {
+            headers['to'] = Array.isArray(obj.to) ? obj.to.join(', ') : obj.to;
+          }
+          
+          // Extract subject
+          if (obj.subject) {
+            headers['subject'] = obj.subject;
+          } else if (obj.headers && obj.headers['subject']) {
+            headers['subject'] = obj.headers['subject'];
+          }
+          
+          // Extract date
+          if (obj.headers && obj.headers['date']) {
+            // Resend wraps date in extra quotes sometimes
+            headers['date'] = obj.headers['date'].replace(/^"+|"+$/g, '');
+          } else if (obj.created_at) {
+            headers['date'] = obj.created_at;
+          }
+          
+          // Extract existing threading headers
+          if (obj.headers) {
+            if (obj.headers['references']) headers['references'] = obj.headers['references'];
+            if (obj.headers['in-reply-to']) headers['in-reply-to'] = obj.headers['in-reply-to'];
+          }
+          
+          // Extract reply-to
+          if (obj.reply_to && Array.isArray(obj.reply_to) && obj.reply_to.length > 0) {
+            headers['reply-to'] = obj.reply_to.join(', ');
+          }
+          
+          return headers;
+        }
+
         function extractHeaders(e) {
           const rawHeaders = rawHeadersInput.value;
           
@@ -576,8 +631,21 @@
           }
           
           try {
-            // 1. Try strict parsing first
-            let headers = parseEmailHeaders(rawHeaders);
+            let headers = {};
+            
+            // 0. Try parsing as Resend JSON response first
+            if (rawHeaders.trimStart().startsWith('{')) {
+              try {
+                headers = parseResendJson(rawHeaders);
+              } catch (jsonErr) {
+                // Not valid JSON, fall through to raw header parsing
+              }
+            }
+            
+            // 1. Try strict raw header parsing if JSON didn't yield a message-id
+            if (!headers['message-id']) {
+              headers = parseEmailHeaders(rawHeaders);
+            }
             
             // 2. Fallback to smart fuzzy search if key fields are missing
             if (!headers['message-id']) {
@@ -593,9 +661,7 @@
             
             // Validate minimum required field
             if (!messageId) {
-               // Silent fail on auto-type, strict on manual? 
-               // Since we only have auto-type now, we only throw if it looked like a real attempt
-               if(rawHeaders.length > 100) throw new Error('Could not find Message-ID. Paste full headers.');
+               if(rawHeaders.length > 100) throw new Error('Could not find Message-ID. Paste full email headers or a Resend email JSON response.');
                return;
             }
             
