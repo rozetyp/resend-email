@@ -36,7 +36,7 @@ node api-proxy.js
 - **Multiple Recipients**: Send to multiple To/CC/BCC addresses using comma-separated emails with inline validation
 - **Sent Inbox**: Browse all sent emails with delivery status (delivered, bounced, opened, clicked). Click any row to read the full email body.
 - **Domain Loader**: Fetch verified sender domains directly from your Resend account with one click
-- **Reply Threading**: Paste email headers from Gmail's "Show original" to link replies to existing conversation threads (Gmail, Outlook, Apple Mail, Thunderbird compatible)
+- **Reply Threading**: Paste email headers from Gmail's "Show original", or a Resend email JSON response, to link replies to existing conversation threads (Gmail, Outlook, Apple Mail, Thunderbird compatible)
 - **Mobile Friendly**: Works on desktop, tablet, and mobile browsers
 - **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
 
@@ -44,7 +44,7 @@ node api-proxy.js
 
 1. Open the original email in Gmail → **Show original**
 2. Copy all text (Ctrl+A / Cmd+A)
-3. In Resend Pad, click **Connect Thread** and paste
+3. In Resend Pad, click **Connect Thread** and paste raw email headers (Gmail's "Show original") **or** the JSON from Resend's `GET /emails/:id` response
 4. Form auto-fills To, Subject (with Re:), and threading headers (Message-ID, References)
 5. Type your reply and send – appears in the same conversation thread
 
