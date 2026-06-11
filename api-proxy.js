@@ -72,6 +72,11 @@ const server = http.createServer((req, res) => {
       else if (filePath.endsWith('.json')) contentType = 'application/json';
       else if (filePath.endsWith('.xml')) contentType = 'application/xml';
       else if (filePath.endsWith('.txt')) contentType = 'text/plain';
+      else if (filePath.endsWith('.png')) contentType = 'image/png';
+      else if (filePath.endsWith('.svg')) contentType = 'image/svg+xml';
+      else if (filePath.endsWith('.ico')) contentType = 'image/x-icon';
+      else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) contentType = 'image/jpeg';
+      else if (filePath.endsWith('.webmanifest')) contentType = 'application/manifest+json';
       
       console.log('[SERVE] Serving file:', filePath, 'as', contentType);
       res.writeHead(200, { 'Content-Type': contentType });
