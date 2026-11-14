@@ -2,7 +2,11 @@
 
 Send email from your browser with your own Resend API key. No code, no accounts, no storage.
 
+Useful for one-off sends from a verified domain, testing a Resend setup, and replying from your own domain to mail you receive elsewhere (for example, `support@yourdomain.com` forwarded into Gmail by Cloudflare Email Routing), with the reply kept in the original thread.
+
 **Live:** https://resendpad.up.railway.app ([about](https://resendpad.up.railway.app/landing.html))
+
+<p align="center"><img src=".github/screenshot.png" alt="Resend Pad compose screen with a reply linked to an existing thread" width="560"></p>
 
 ## How it works
 
