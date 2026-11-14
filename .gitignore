@@ -2,8 +2,3 @@
 node_modules/
 .venv/
 .env
-
-# Local working notes (never published)
-CHAT.md
-REPO-MEMORY.md
-WORK-LOG.md
