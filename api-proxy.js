@@ -11,6 +11,7 @@ const path = require('path');
 const PORT = process.env.PORT || 3001;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const MAX_BODY_BYTES = 45 * 1024 * 1024; // Resend caps an email at 40MB after base64
+const UPSTREAM_TIMEOUT_MS = Number(process.env.UPSTREAM_TIMEOUT_MS) || 30000;
 
 const MIME_TYPES = {
   '.html': 'text/html; charset=utf-8',
@@ -123,9 +124,14 @@ function forward(res, method, resendPath, apiKey, body) {
     });
   });
 
+  upstream.setTimeout(UPSTREAM_TIMEOUT_MS, () => upstream.destroy(new Error('timeout')));
+
   upstream.on('error', error => {
+    const timedOut = error.message === 'timeout';
     console.error(`Resend request failed: ${error.message}`);
-    sendJson(res, 502, { error: 'Failed to contact Resend API' });
+    sendJson(res, timedOut ? 504 : 502, {
+      error: timedOut ? 'Resend API did not respond in time. Try again.' : 'Failed to contact Resend API',
+    });
   });
 
   if (body) upstream.write(body);

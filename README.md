@@ -22,7 +22,7 @@ Useful for one-off sends from a verified domain, testing a Resend setup, and rep
 - **Rich text editor** (Quill): bold, italic, headings, lists, links, code blocks. Output is rewritten with inline styles so spacing holds up in Gmail and Outlook.
 - **Attachments:** multiple files, base64-encoded in the browser.
 - **Multiple recipients** for To, CC and BCC.
-- **Sent tab:** your latest emails with their delivery status (delivered, bounced, opened, clicked); click a row to read the full body.
+- **Sent tab:** your sent emails, 50 at a time with **Load more**, with their delivery status (delivered, bounced, opened, clicked); click a row to read the full body.
 - **Reply threading:** click **Connect Thread** and paste either the raw headers of the original email (Gmail: *Show original*) or the JSON from Resend's `GET /emails/:id`. Resend Pad fills To and Subject and sets `In-Reply-To` and `References`, so your reply lands in the same conversation in Gmail, Outlook, Apple Mail and Thunderbird.
 
 ## API key permissions

@@ -386,9 +386,7 @@
           html = html.replace(/<ol>/g, '<ol style="margin: 10px 0; padding-left: 30px;">');
           html = html.replace(/<li>/g, '<li style="margin: 0 0 5px 0;">');
           html = html.replace(/<pre/g, '<pre style="margin: 10px 0; padding: 10px; background: #f5f5f5; border-radius: 4px;"');
-          // Remove empty paragraphs that create extra space
-          html = html.replace(/<p><br><\/p>/g, '');
-          html = html.replace(/<p>\s*<\/p>/g, '');
+          // Keep empty <p><br></p> paragraphs: with margin 0 they are the only blank lines between paragraphs.
           return html;
         }
 
@@ -543,30 +541,13 @@
             document.getElementById('subject').value = '';
             document.getElementById('to_email').value = '';
             rawHeadersInput.value = '';
-            
-            // 2. Remove the auto-generated quote from Editor
-            if (quill) {
-                let html = quill.root.innerHTML;
-                // Regex to match the standard quote block we inserted
-                // Matches: <p><br></p><p>On ... wrote:</p><blockquote ...>...</blockquote><p><br></p>
-                // We make it slightly flexible to catch variations
-                const quoteRegex = /<p>On .*? wrote:<\/p><blockquote[^>]*>.*?<\/blockquote>/i;
-                const brRegex = /<p><br><\/p>/g;
-                
-                if (html.match(quoteRegex)) {
-                   html = html.replace(quoteRegex, '');
-                   // Clean up potential double-spacing left behind
-                   html = html.replace(/<p><br><\/p><p><br><\/p>/g, '<p><br></p>'); 
-                   quill.root.innerHTML = html;
-                }
-            }
-            
-            // 3. Toggle UI State
+
+            // 2. Toggle UI State
             threadSummaryCard.classList.add('hidden');
             replyInputArea.classList.remove('hidden');
             errorEl.classList.add('hidden');
             
-            // 4. Focus back on headers input
+            // 3. Focus back on headers input
             rawHeadersInput.focus();
         });
 
@@ -613,14 +594,6 @@
             headers['subject'] = obj.subject;
           } else if (obj.headers && obj.headers['subject']) {
             headers['subject'] = obj.headers['subject'];
-          }
-          
-          // Extract date
-          if (obj.headers && obj.headers['date']) {
-            // Resend wraps date in extra quotes sometimes
-            headers['date'] = obj.headers['date'].replace(/^"+|"+$/g, '');
-          } else if (obj.created_at) {
-            headers['date'] = obj.created_at;
           }
           
           // Extract existing threading headers
@@ -679,7 +652,6 @@
             const references = headers['references'];
             const from = headers['from'] || headers['reply-to'];
             const subject = headers['subject'];
-            const date = headers['date'];
             
             // Validate minimum required field
             if (!messageId) {
@@ -693,10 +665,8 @@
             
             // Auto-fill To field
             let toEmail = '';
-            let fromName = '';
             if (from) {
               toEmail = extractEmailAddress(from);
-              fromName = extractName(from);
               if (toEmail) document.getElementById('to_email').value = toEmail;
             }
             
@@ -707,16 +677,6 @@
               document.getElementById('subject').value = reSubject;
             }
 
-            // "Reply Quote" Generator
-            if (date && from && quill) {
-                const cleanDate = formatDateForQuote(date);
-                const quoteHeader = `<p><br></p><p>On ${cleanDate}, ${fromName || toEmail} wrote:</p><blockquote style="border-left: 2px solid #ccc; padding-left: 10px; margin-left: 5px; color: #666;">...</blockquote><p><br></p>`;
-                
-                if (quill.getText().trim().length === 0) {
-                     quill.clipboard.dangerouslyPasteHTML(0, quoteHeader);
-                }
-            }
-            
             // UPDATE UI STATE: Success
             document.getElementById('summary_subject').textContent = reSubject || '(No Subject)';
             document.getElementById('summary_to').textContent = toEmail || '(Unknown)';
@@ -814,21 +774,6 @@
           // If no brackets, check if it's just an email
           if (str.includes('@')) return str.trim();
           return '';
-        }
-
-        // Extract name from "Name <email@example.com>"
-        function extractName(str) {
-            const match = str.match(/^"?([^"<]+)"?\s*</);
-            return match ? match[1].trim() : str.split('@')[0];
-        }
-
-        // Format date for quote line
-        function formatDateForQuote(dateStr) {
-            try {
-                const d = new Date(dateStr);
-                // format: Mon, Jan 2, 2023 at 3:04 PM
-                return d.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-            } catch(e) { return dateStr; }
         }
 
         // ============ FORM SUBMISSION ============
@@ -944,7 +889,7 @@
                   Array.from(fileInput.files).map(file => new Promise((resolve, reject) => {
                     const reader = new FileReader();
                     reader.onload = () => resolve({ filename: file.name, content: reader.result.split(',')[1] });
-                    reader.onerror = reject;
+                    reader.onerror = () => reject(new Error(`Could not read attachment "${file.name}"`));
                     reader.readAsDataURL(file);
                   }))
                 );
@@ -970,12 +915,13 @@
                 body: JSON.stringify(payload)
               });
 
-              const data = await response.json();
+              const data = await response.json().catch(() => ({}));
 
               if (!response.ok) {
-                // Handle API errors (e.g., validation, auth)
-                const errorMsg = data.message || 'An unknown error occurred.';
-                throw new Error(`API Error (${data.name}): ${errorMsg}`);
+                // Resend's messages already name the problem field, so show them as-is
+                const apiError = new Error(data.message || data.error || `Request failed (HTTP ${response.status})`);
+                apiError.status = response.status;
+                throw apiError;
               }
               
               // 7. Show success message
@@ -991,15 +937,14 @@
               `;
               
             } catch (error) {
-              // Show failure message with actionable guidance
+              // Add a hint only where there is something specific to do
               let errorMsg = error.message;
-              
-              if (errorMsg.includes('401') || errorMsg.includes('Unauthorized')) {
+              if (error.status === 401) {
                 errorMsg += ' → Check your API key at https://resend.com/api-keys';
-              } else if (errorMsg.includes('invalid_from_address') || errorMsg.includes('from')) {
-                errorMsg += ' → "From" email must be verified in your Resend account';
-              } else if (errorMsg.includes('invalid_to_address') || errorMsg.includes('to')) {
-                errorMsg += ' → "To" email address is invalid';
+              } else if (error.status === 429) {
+                errorMsg += ' → Rate limit or sending quota reached. Wait a moment and try again.';
+              } else if (error instanceof TypeError) {
+                errorMsg = 'Could not reach the Resend Pad server. Check your connection and try again.';
               }
               
               messageContainer.innerHTML = `
@@ -1041,7 +986,7 @@
         loadSentEmails();
       });
 
-      document.getElementById('refresh_sent_btn').addEventListener('click', loadSentEmails);
+      document.getElementById('refresh_sent_btn').addEventListener('click', () => loadSentEmails());
 
       // Modal close
       document.getElementById('modal_close').addEventListener('click', () => {
@@ -1066,7 +1011,7 @@
           const response = await fetch(`${API_URL}/api/email/${id}`, {
             headers: { 'Authorization': `Bearer ${apiKey}` }
           });
-          const e = await response.json();
+          const e = await response.json().catch(() => ({}));
           if (!response.ok) throw new Error(e.message || e.error || `Error ${response.status}`);
 
           document.getElementById('modal_subject').textContent = e.subject || '(no subject)';
@@ -1079,40 +1024,68 @@
         }
       }
 
-      async function loadSentEmails() {
+      // Sent list state: Resend paginates with a cursor (`after` = id of the last email shown)
+      const SENT_PAGE_SIZE = 50;
+      let sentEmails = [];
+
+      async function loadSentEmails(append = false) {
         const apiKey = document.getElementById('api_key').value.trim();
         const sentList = document.getElementById('sent_list');
+        const moreBtn = document.getElementById('sent_more_btn');
 
         if (!apiKey) {
           sentList.innerHTML = '<p class="text-sm text-red-500 text-center py-8">Enter your API key in the Compose tab first.</p>';
           return;
         }
 
-        sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Loading...</p>';
+        if (append && moreBtn) {
+          moreBtn.disabled = true;
+          moreBtn.textContent = 'Loading...';
+        } else {
+          sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">Loading...</p>';
+        }
 
         try {
-          const response = await fetch(`${API_URL}/api/sent`, {
+          const params = new URLSearchParams({ limit: String(SENT_PAGE_SIZE) });
+          if (append && sentEmails.length) params.set('after', sentEmails[sentEmails.length - 1].id);
+
+          const response = await fetch(`${API_URL}/api/sent?${params}`, {
             headers: { 'Authorization': `Bearer ${apiKey}` }
           });
 
-          const data = await response.json();
+          const data = await response.json().catch(() => ({}));
 
           if (!response.ok) {
             throw new Error(data.message || data.error || `Error ${response.status}`);
           }
 
-          const emails = data.data || [];
-
-          if (emails.length === 0) {
-            sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">No sent emails found.</p>';
-            return;
+          const page = data.data || [];
+          sentEmails = append ? sentEmails.concat(page) : page;
+          renderSentList(data.has_more === true);
+        } catch (err) {
+          if (append && moreBtn) {
+            moreBtn.disabled = false;
+            moreBtn.textContent = `Failed to load (${err.message}). Retry`;
+          } else {
+            sentList.innerHTML = `<p class="text-sm text-red-500 text-center py-8">${escapeHtml(err.message)}</p>`;
           }
+        }
+      }
 
-          const statusColor = s => ({
-            delivered: 'text-green-600', bounced: 'text-red-500', clicked: 'text-blue-600', opened: 'text-blue-500'
-          }[s] || 'text-gray-400');
+      function renderSentList(hasMore) {
+        const sentList = document.getElementById('sent_list');
+        const emails = sentEmails;
 
-          sentList.innerHTML = `
+        if (emails.length === 0) {
+          sentList.innerHTML = '<p class="text-sm text-gray-400 text-center py-8">No sent emails found.</p>';
+          return;
+        }
+
+        const statusColor = s => ({
+          delivered: 'text-green-600', bounced: 'text-red-500', clicked: 'text-blue-600', opened: 'text-blue-500'
+        }[s] || 'text-gray-400');
+
+        sentList.innerHTML = `
             <div class="divide-y divide-gray-100">
               ${emails.map(e => `
                 <div class="py-3 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2 transition-colors" data-id="${escapeHtml(e.id)}">
@@ -1129,15 +1102,16 @@
                 </div>
               `).join('')}
             </div>
+            ${hasMore ? '<div class="text-center mt-4"><button id="sent_more_btn" class="text-sm text-blue-600 hover:underline">Load more</button></div>' : ''}
           `;
 
-          // Row click → open detail modal
-          sentList.querySelectorAll('[data-id]').forEach(row => {
-            row.addEventListener('click', () => openEmailDetail(row.dataset.id));
-          });
-        } catch (err) {
-          sentList.innerHTML = `<p class="text-sm text-red-500 text-center py-8">${escapeHtml(err.message)}</p>`;
-        }
+        // Row click → open detail modal
+        sentList.querySelectorAll('[data-id]').forEach(row => {
+          row.addEventListener('click', () => openEmailDetail(row.dataset.id));
+        });
+
+        const moreBtn = document.getElementById('sent_more_btn');
+        if (moreBtn) moreBtn.addEventListener('click', () => loadSentEmails(true));
       }
 
     </script>
