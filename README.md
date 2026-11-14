@@ -1,123 +1,78 @@
 # Resend Pad
 
-A minimal email utility to send emails using your Resend API key.
+Send email from your browser with your own Resend API key. No code, no accounts, no storage.
 
-**Send emails from your browser. No code, no accounts, no storage.**
+**Live:** https://resendpad.up.railway.app ([about](https://resendpad.up.railway.app/landing.html))
 
-## Quick Start
+## How it works
 
-### Online (Railway Deployment)
-```
-Landing Page:  https://resendpad.up.railway.app/landing.html
-Email Editor:  https://resendpad.up.railway.app/index.html
-```
-
-### Local Development
-```bash
-node api-proxy.js
-# Landing page: http://localhost:3001/landing.html
-# Email editor: http://localhost:3001/index.html
-```
-
-## How It Works
-
-1. **Paste your API key** into the form (stored only in browser memory)
-2. **Load your verified domains** from Resend with "Load Domains" button (or enter From email manually)
-3. **Add recipients** – comma-separated To/CC/BCC with live validation
-4. **Compose your email** using the rich text editor with formatting toolbar
-5. **Attach files** if needed – multiple files supported
-6. **Click Send** – your email is delivered via Resend immediately
-7. **Check Sent tab** – browse sent emails, see delivery status, click any row to read the full email body
+1. Paste your Resend API key (kept only in the page; never stored)
+2. Click **Load Domains** to pick a verified sender, or type the From address
+3. Add recipients: comma-separated To, CC and BCC, validated as you type
+4. Write the email in the rich text editor and attach files if needed
+5. Click **Send**
+6. Open the **Sent** tab to see delivery status and read any sent email
 
 ## Features
 
-- **Rich Text Editor**: Format emails with bold, italic, underline, headings, lists, links, code blocks via Quill.js
-- **File Attachments**: Attach multiple files to your emails. Files are base64-encoded client-side and sent via Resend's API. Never touch our server.
-- **Multiple Recipients**: Send to multiple To/CC/BCC addresses using comma-separated emails with inline validation
-- **Sent Inbox**: Browse all sent emails with delivery status (delivered, bounced, opened, clicked). Click any row to read the full email body.
-- **Domain Loader**: Fetch verified sender domains directly from your Resend account with one click
-- **Reply Threading**: Paste email headers from Gmail's "Show original", or a Resend email JSON response, to link replies to existing conversation threads (Gmail, Outlook, Apple Mail, Thunderbird compatible)
-- **Mobile Friendly**: Works on desktop, tablet, and mobile browsers
-- **No Account Required**: BYOK (Bring Your Own Key) – just paste your Resend API key
+- **Rich text editor** (Quill): bold, italic, headings, lists, links, code blocks. Output is rewritten with inline styles so spacing holds up in Gmail and Outlook.
+- **Attachments:** multiple files, base64-encoded in the browser.
+- **Multiple recipients** for To, CC and BCC.
+- **Sent tab:** your latest emails with their delivery status (delivered, bounced, opened, clicked); click a row to read the full body.
+- **Reply threading:** click **Connect Thread** and paste either the raw headers of the original email (Gmail: *Show original*) or the JSON from Resend's `GET /emails/:id`. Resend Pad fills To and Subject and sets `In-Reply-To` and `References`, so your reply lands in the same conversation in Gmail, Outlook, Apple Mail and Thunderbird.
 
-## Reply Threading
+## API key permissions
 
-1. Open the original email in Gmail → **Show original**
-2. Copy all text (Ctrl+A / Cmd+A)
-3. In Resend Pad, click **Connect Thread** and paste raw email headers (Gmail's "Show original") **or** the JSON from Resend's `GET /emails/:id` response
-4. Form auto-fills To, Subject (with Re:), and threading headers (Message-ID, References)
-5. Type your reply and send – appears in the same conversation thread
+- **Full access:** everything, including Load Domains and the Sent tab.
+- **Sending access:** sending works if you type the From address yourself; Load Domains and the Sent tab will fail.
 
-## Security & Privacy
+Create keys at [resend.com/api-keys](https://resend.com/api-keys). You need at least one verified domain.
 
-- **Your API key never leaves your control** – sent directly to Resend's API in the Authorization header. Never stored, logged, or persisted on our servers.
-- **No email content is logged** – email subject and body are forwarded to Resend and discarded. No database, no history, no backups.
-- **No user accounts or tracking** – no sign-up, no login, no email collection, no analytics, no cookies.
-- **Transparent & auditable** – full source code on GitHub. Self-host if you want complete control.
-- **Stateless design** – the proxy doesn't store anything. Restart the server and everything is cleared.
+## Privacy
 
-**API Key Safety:**
-- Your key is sent in HTTP headers only
-- Never logged to disk in production
-- Lost when container restarts (no persistence)
-- You can rotate keys anytime in Resend dashboard
+- The key travels only in the `Authorization` header, from your browser through the proxy to Resend. It is never stored or logged.
+- Email content, recipients, subjects and headers are never logged or stored. The server logs only method, route and status code.
+- No accounts, no database, no analytics, no cookies.
 
-## How the Proxy Works
+## Why a proxy?
 
-```
-Browser                    Your Server (api-proxy.js)       Resend API
-  │                              │                              │
-  ├─ POST /api/send ────────────>│                              │
-  │  (with Bearer token)         ├─ POST /emails ──────────────>│
-  │                              │  (with your API key)         │
-  │                              │<─ 200 OK ────────────────────┤
-  │<─ 200 OK ─────────────────────┤                              │
-  │                              │                              │
-```
+Resend's API rejects requests made directly from a browser (CORS). `api-proxy.js` forwards four calls to `api.resend.com` and returns the response unchanged:
 
-**Why a proxy?**
-- Resend API doesn't support CORS from browsers
-- Proxy handles CORS transparently
-- API key is passed through, never stored or logged
+| Route | Resend endpoint |
+|---|---|
+| `POST /api/send` | `POST /emails` |
+| `GET /api/domains` | `GET /domains` |
+| `GET /api/sent` | `GET /emails` |
+| `GET /api/email/:id` | `GET /emails/:id` |
 
-## Requirements
+Everything else is served from `public/`.
 
-- A modern web browser (Chrome, Firefox, Safari, Edge)
-- A Resend account with an API key ([resend.com/api-keys](https://resend.com/api-keys))
-- At least one verified domain in Resend
+## Run it yourself
 
-**Note:** "Sending Only" keys cannot list domains, but can send emails if you manually enter the From address.
+Requires Node.js 18+. There are no dependencies to install.
 
-## Deployment
-
-### Railway (Recommended)
-```bash
-railway up
-```
-Railway runs `node api-proxy.js` on the default PORT, serves static files, proxies API calls through `/api/*`.
-
-[Deploy to Railway](https://railway.com?referralCode=CEnEQp) – both of us get $5 credit.
-
-### Self-Hosted
 ```bash
 git clone https://github.com/rozetyp/resend-email.git
 cd resend-email
 node api-proxy.js
+# http://localhost:3001
 ```
 
-Works on Vercel, Netlify, or any Node.js server. Auto-detects environment.
+Set `PORT` to change the port. Any host that runs a long-lived Node process works (Railway, Render, Fly.io, a VPS). Serverless platforms such as Vercel or Netlify need the proxy rewritten as functions.
 
-## Technical Stack
+On Railway, `railway.json` already sets the start command: connect the repo, or run `railway up`. [Railway referral link](https://railway.com?referralCode=CEnEQp) (gives both of us $5 credit).
 
-**Frontend:** HTML5 + Vanilla JavaScript (no frameworks), Tailwind CSS (CDN), Quill.js rich text editor
+## Project layout
 
-**Backend:** Node.js + native HTTP server, proxies to Resend API, serves static files, handles CORS
+```
+api-proxy.js   Node http server: Resend proxy + static files
+public/        Everything the browser can load (app, landing page, icons, sitemap)
+```
 
 ## License
 
-Open source. Use freely.
+[MIT](LICENSE)
 
 ## Support
 
-- [Open an issue on GitHub](https://github.com/rozetyp/resend-email/issues)
-- Check the source code in `index.html` and `api-proxy.js`
+[Open an issue](https://github.com/rozetyp/resend-email/issues).

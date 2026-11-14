@@ -92,7 +92,7 @@
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 mb-2">Open Source</h3>
-          <p class="text-sm text-gray-600">Audit the code. Self-host it. Deploy to Railway, Vercel, or anywhere.</p>
+          <p class="text-sm text-gray-600">Audit the code. Self-host it on Railway or any Node.js host.</p>
         </div>
       </div>
     </div>
@@ -128,7 +128,7 @@
     <div class="space-y-4 max-w-2xl mx-auto">
       <div>
         <p class="font-medium text-gray-900 mb-1">Your API Key is Safe</p>
-        <p class="text-sm text-gray-600">Your key is used only in your browser. It's sent directly to Resend's API in the Authorization header and never stored, logged, or persisted anywhere.</p>
+        <p class="text-sm text-gray-600">Your key goes from your browser through this small proxy to Resend, in the Authorization header only. It is never stored, logged, or persisted anywhere.</p>
       </div>
       <div>
         <p class="font-medium text-gray-900 mb-1">Your Email Content is Never Stored</p>
@@ -136,7 +136,7 @@
       </div>
       <div>
         <p class="font-medium text-gray-900 mb-1">Stateless Proxy Design</p>
-        <p class="text-sm text-gray-600">Resend Pad is just a thin proxy: it receives your request, adds your API key, forwards to Resend, returns the response. Nothing stored in between.</p>
+        <p class="text-sm text-gray-600">Resend Pad is just a thin proxy: it receives your request, passes it to Resend with your key, and returns the response. Nothing stored in between.</p>
       </div>
       <div>
         <p class="font-medium text-gray-900 mb-1">Open Source</p>
@@ -164,21 +164,19 @@
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 mb-2">Can I reply to existing threads?</h3>
-          <p class="text-sm text-gray-600">Yes. Use the "Connect Thread" feature to paste headers from Gmail (Show original). Resend Pad will auto-detect the Message-ID and link your reply to the conversation.</p>
+          <p class="text-sm text-gray-600">Yes. Use "Connect Thread" and paste headers from Gmail (Show original) or a Resend email JSON. Resend Pad detects the Message-ID and links your reply to the conversation.</p>
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 mb-2">Can I self-host Resend Pad?</h3>
-          <p class="text-sm text-gray-600">Yes. It's a single Node.js proxy + HTML file. Deploy to <a href="https://railway.app" class="text-blue-600 hover:underline">Railway</a>, Vercel, or your own server in minutes.</p>
+          <p class="text-sm text-gray-600">Yes. It's one Node.js file with no dependencies plus static HTML. Run <code>node api-proxy.js</code> on <a href="https://railway.com?referralCode=CEnEQp" class="text-blue-600 hover:underline">Railway</a> or any server with Node 18+.</p>
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 mb-2">What API key do I need?</h3>
-          <p class="text-sm text-gray-600">You need a "Full Access" or "Sending" key that can list domains. "Sending Only" keys are limited. Get one at <a href="https://resend.com/api-keys" class="text-blue-600 hover:underline">resend.com/api-keys</a>.</p>
+          <p class="text-sm text-gray-600">A "Full access" key unlocks everything, including Load Domains and the Sent tab. A "Sending access" key can still send if you type the From address. Get one at <a href="https://resend.com/api-keys" class="text-blue-600 hover:underline">resend.com/api-keys</a>.</p>
         </div>
       </div>
     </div>
   </div>
-
-
 
   <!-- ============ COMMON QUESTIONS ============ -->
   <div class="bg-gray-50 border-y border-gray-200 py-16 px-4 sm:px-8">
@@ -191,11 +189,7 @@
         </div>
         <div>
           <h3 class="font-semibold text-gray-900 mb-2">Is my API key secure?</h3>
-          <p class="text-sm text-gray-600">Yes. Your key stays in your browser, sent directly to Resend in the Authorization header only. Never stored, logged, or persisted.</p>
-        </div>
-        <div>
-          <h3 class="font-semibold text-gray-900 mb-2">Can I self-host this?</h3>
-          <p class="text-sm text-gray-600">Yes. It's a single Node.js proxy + HTML file. Deploy to <a href="https://railway.com?referralCode=CEnEQp" class="text-blue-600 hover:underline">Railway</a>, Vercel, or your own server.</p>
+          <p class="text-sm text-gray-600">Yes. It travels only in the Authorization header, through the proxy to Resend. Never stored, logged, or persisted.</p>
         </div>
       </div>
     </div>

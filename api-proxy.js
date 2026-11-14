@@ -1,288 +1,156 @@
-// Minimal API proxy for Resend + Static file server
-// This allows the browser app to securely call Resend without exposing API key
-// The API key is passed by the client, then proxied to Resend
+// Resend Pad server: static files from ./public plus a pass-through proxy to the Resend API.
+// The proxy exists because Resend rejects browser (CORS) requests. The user's API key arrives
+// in the Authorization header and is forwarded as-is. Nothing is stored, and nothing about
+// the email (recipients, subject, body, headers) is ever logged.
 
 const http = require('http');
 const https = require('https');
 const fs = require('fs');
 const path = require('path');
-const url = require('url');
 
 const PORT = process.env.PORT || 3001;
-const API_URL = process.env.API_URL || 'http://localhost:3001';
+const PUBLIC_DIR = path.join(__dirname, 'public');
+const MAX_BODY_BYTES = 45 * 1024 * 1024; // Resend caps an email at 40MB after base64
+
+const MIME_TYPES = {
+  '.html': 'text/html; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+  '.js': 'application/javascript; charset=utf-8',
+  '.json': 'application/json; charset=utf-8',
+  '.xml': 'application/xml; charset=utf-8',
+  '.txt': 'text/plain; charset=utf-8',
+  '.png': 'image/png',
+  '.svg': 'image/svg+xml',
+  '.ico': 'image/x-icon',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webmanifest': 'application/manifest+json',
+};
 
 const server = http.createServer((req, res) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  
-  // Enable CORS
+  const { pathname, search } = new URL(req.url, 'http://localhost');
+  res.on('finish', () => {
+    // Log the route shape only; email ids and query strings stay out of the logs.
+    const route = pathname.startsWith('/api/email/') ? '/api/email/:id' : pathname;
+    console.log(`${req.method} ${route} ${res.statusCode}`);
+  });
+
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS, GET');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
-  // Handle preflight
   if (req.method === 'OPTIONS') {
-    console.log('[PREFLIGHT] Responding to OPTIONS request');
-    res.writeHead(200);
-    res.end();
-    return;
+    res.writeHead(204);
+    return res.end();
   }
 
-  // Route API calls
-  if (req.method === 'POST' && req.url === '/api/send') {
-    res.setHeader('Content-Type', 'application/json');
-    handleSendEmail(req, res);
-  } else if (req.method === 'GET' && req.url === '/api/domains') {
-    res.setHeader('Content-Type', 'application/json');
-    handleGetDomains(req, res);
-  } else if (req.method === 'GET' && req.url.startsWith('/api/email/')) {
-    res.setHeader('Content-Type', 'application/json');
-    handleGetEmail(req, res);
-  } else if (req.method === 'GET' && req.url.startsWith('/api/sent')) {
-    res.setHeader('Content-Type', 'application/json');
-    handleGetSent(req, res);
-  } else {
-    // Serve static files (index.html for root)
-    let filePath = req.url === '/' ? '/index.html' : req.url;
-    filePath = path.join(__dirname, filePath);
-    
-    // Security: prevent directory traversal
-    const realPath = path.resolve(filePath);
-    const baseDir = path.resolve(__dirname);
-    
-    if (!realPath.startsWith(baseDir)) {
-      console.log('[SECURITY] Directory traversal attempt blocked:', req.url);
-      res.writeHead(403, { 'Content-Type': 'text/plain' });
-      res.end('Forbidden');
-      return;
+  if (pathname.startsWith('/api/')) {
+    const apiKey = (req.headers.authorization || '').replace(/^Bearer\s+/i, '');
+    if (!apiKey) return sendJson(res, 401, { error: 'Missing API key' });
+
+    if (req.method === 'POST' && pathname === '/api/send') {
+      return readBody(req, res, body => forward(res, 'POST', '/emails', apiKey, body));
     }
-    
-    fs.readFile(filePath, (err, data) => {
-      if (err) {
-        console.log('[404] File not found:', filePath);
-        res.writeHead(404, { 'Content-Type': 'text/plain' });
-        res.end('404 Not Found');
-        return;
-      }
-      
-      // Set content type based on file extension
-      let contentType = 'text/plain';
-      if (filePath.endsWith('.html')) contentType = 'text/html';
-      else if (filePath.endsWith('.css')) contentType = 'text/css';
-      else if (filePath.endsWith('.js')) contentType = 'application/javascript';
-      else if (filePath.endsWith('.json')) contentType = 'application/json';
-      else if (filePath.endsWith('.xml')) contentType = 'application/xml';
-      else if (filePath.endsWith('.txt')) contentType = 'text/plain';
-      else if (filePath.endsWith('.png')) contentType = 'image/png';
-      else if (filePath.endsWith('.svg')) contentType = 'image/svg+xml';
-      else if (filePath.endsWith('.ico')) contentType = 'image/x-icon';
-      else if (filePath.endsWith('.jpg') || filePath.endsWith('.jpeg')) contentType = 'image/jpeg';
-      else if (filePath.endsWith('.webmanifest')) contentType = 'application/manifest+json';
-      
-      console.log('[SERVE] Serving file:', filePath, 'as', contentType);
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(data);
-    });
+    if (req.method === 'GET' && pathname === '/api/domains') {
+      return forward(res, 'GET', '/domains', apiKey);
+    }
+    if (req.method === 'GET' && pathname === '/api/sent') {
+      return forward(res, 'GET', `/emails${search}`, apiKey);
+    }
+    if (req.method === 'GET' && pathname.startsWith('/api/email/')) {
+      const id = decodeSafe(pathname.slice('/api/email/'.length));
+      if (!id) return sendJson(res, 400, { error: 'Missing email id' });
+      return forward(res, 'GET', `/emails/${encodeURIComponent(id)}`, apiKey);
+    }
+    return sendJson(res, 404, { error: 'Not found' });
   }
+
+  if (req.method !== 'GET' && req.method !== 'HEAD') return sendText(res, 405, 'Method Not Allowed');
+  serveStatic(pathname, res);
 });
 
-function handleSendEmail(req, res) {
-  let body = '';
-  
+function serveStatic(pathname, res) {
+  const decoded = decodeSafe(pathname);
+  const filePath = path.resolve(PUBLIC_DIR, '.' + (decoded === '/' ? '/index.html' : decoded));
+  const contentType = MIME_TYPES[path.extname(filePath).toLowerCase()];
+
+  if (decoded === null || !filePath.startsWith(PUBLIC_DIR + path.sep) || !contentType) {
+    return sendText(res, 404, '404 Not Found');
+  }
+
+  fs.readFile(filePath, (err, data) => {
+    if (err) return sendText(res, 404, '404 Not Found');
+    res.writeHead(200, { 'Content-Type': contentType });
+    res.end(data);
+  });
+}
+
+// Collect the request body as bytes (not strings) so multi-byte characters split
+// across chunks are not corrupted.
+function readBody(req, res, done) {
+  const chunks = [];
+  let size = 0;
+  let aborted = false;
   req.on('data', chunk => {
-    body += chunk.toString();
+    if (aborted) return;
+    size += chunk.length;
+    if (size > MAX_BODY_BYTES) {
+      aborted = true;
+      sendJson(res, 413, { error: 'Request too large. Resend accepts up to 40MB per email.' });
+      req.resume();
+      return;
+    }
+    chunks.push(chunk);
   });
-  
   req.on('end', () => {
-    try {
-      const data = JSON.parse(body);
-      const apiKey = req.headers.authorization?.replace('Bearer ', '');
-      
-      console.log('[SEND] Request received');
-      console.log('[SEND] API Key present:', !!apiKey);
-      // Privacy: Do NOT log email content, recipients, or subjects
-      
-      if (!apiKey) {
-        console.log('[SEND] ERROR: Missing API key');
-        res.writeHead(401);
-        res.end(JSON.stringify({ error: 'Missing API key' }));
-        return;
-      }
-      
-      // Forward to Resend API
-      const options = {
-        hostname: 'api.resend.com',
-        path: '/emails',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Length': Buffer.byteLength(body)
-        }
-      };
-      
-      console.log('[SEND] Forwarding to Resend API...');
-      
-      const resendReq = https.request(options, (resendRes) => {
-        let responseBody = '';
-        
-        console.log('[SEND] Resend response status:', resendRes.statusCode);
-        
-        resendRes.on('data', chunk => {
-          responseBody += chunk;
-        });
-        
-        resendRes.on('end', () => {
-          console.log('[SEND] Email sent successfully');
-          res.writeHead(resendRes.statusCode, {
-            'Content-Type': 'application/json',
-            'Access-Control-Allow-Origin': '*'
-          });
-          res.end(responseBody);
-        });
-      });
-      
-      resendReq.on('error', (error) => {
-        console.error('[SEND] ERROR: Resend request failed:', error.message);
-        res.writeHead(500);
-        res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
-      });
-      
-      resendReq.write(body);
-      resendReq.end();
-      
-    } catch (error) {
-      console.error('[SEND] Parse error:', error.message);
-      res.writeHead(400);
-      res.end(JSON.stringify({ error: 'Invalid JSON' }));
-    }
+    if (!aborted) done(Buffer.concat(chunks));
   });
 }
 
-function handleGetDomains(req, res) {
-  const apiKey = req.headers.authorization?.replace('Bearer ', '');
-  
-  console.log('[DOMAINS] Request received');
-  console.log('[DOMAINS] API Key present:', !!apiKey);
-  
-  if (!apiKey) {
-    console.log('[DOMAINS] ERROR: Missing API key');
-    res.writeHead(401);
-    res.end(JSON.stringify({ error: 'Missing API key' }));
-    return;
+function forward(res, method, resendPath, apiKey, body) {
+  const headers = { Authorization: `Bearer ${apiKey}` };
+  if (body) {
+    headers['Content-Type'] = 'application/json';
+    headers['Content-Length'] = body.length;
   }
-  
-  const options = {
-    hostname: 'api.resend.com',
-    path: '/domains',
-    method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${apiKey}`
-    }
-  };
-  
-  console.log('[DOMAINS] Forwarding to Resend API...');
-  
-  const resendReq = https.request(options, (resendRes) => {
-    let body = '';
-    
-    console.log('[DOMAINS] Resend response status:', resendRes.statusCode);
-    
-    resendRes.on('data', chunk => {
-      body += chunk;
-    });
-    
+
+  const upstream = https.request({ hostname: 'api.resend.com', path: resendPath, method, headers }, resendRes => {
+    const chunks = [];
+    resendRes.on('data', chunk => chunks.push(chunk));
     resendRes.on('end', () => {
-      console.log('[DOMAINS] Domains fetched successfully');
-      res.writeHead(resendRes.statusCode, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      });
-      res.end(body);
+      res.writeHead(resendRes.statusCode, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(Buffer.concat(chunks));
     });
   });
-  
-  resendReq.on('error', (error) => {
-    console.error('[DOMAINS] ERROR: Resend request failed:', error.message);
-    res.writeHead(500);
-    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
+
+  upstream.on('error', error => {
+    console.error(`Resend request failed: ${error.message}`);
+    sendJson(res, 502, { error: 'Failed to contact Resend API' });
   });
-  
-  resendReq.end();
+
+  if (body) upstream.write(body);
+  upstream.end();
 }
 
-function handleGetEmail(req, res) {
-  const apiKey = req.headers.authorization?.replace('Bearer ', '');
-  if (!apiKey) {
-    res.writeHead(401);
-    res.end(JSON.stringify({ error: 'Missing API key' }));
-    return;
+function decodeSafe(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
   }
-
-  const emailId = req.url.replace('/api/email/', '');
-  const resendReq = https.request({
-    hostname: 'api.resend.com',
-    path: `/emails/${emailId}`,
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${apiKey}` }
-  }, (resendRes) => {
-    let body = '';
-    resendRes.on('data', chunk => { body += chunk; });
-    resendRes.on('end', () => {
-      res.writeHead(resendRes.statusCode, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      });
-      res.end(body);
-    });
-  });
-
-  resendReq.on('error', (error) => {
-    res.writeHead(500);
-    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
-  });
-
-  resendReq.end();
 }
 
-function handleGetSent(req, res) {
-  const apiKey = req.headers.authorization?.replace('Bearer ', '');
+function sendJson(res, status, obj) {
+  if (res.headersSent) return;
+  res.writeHead(status, { 'Content-Type': 'application/json; charset=utf-8' });
+  res.end(JSON.stringify(obj));
+}
 
-  if (!apiKey) {
-    res.writeHead(401);
-    res.end(JSON.stringify({ error: 'Missing API key' }));
-    return;
-  }
-
-  const parsedUrl = new URL(req.url, `http://localhost`);
-  const page = parsedUrl.searchParams.get('page') || '1';
-
-  const resendReq = https.request({
-    hostname: 'api.resend.com',
-    path: `/emails?page=${page}`,
-    method: 'GET',
-    headers: { 'Authorization': `Bearer ${apiKey}` }
-  }, (resendRes) => {
-    let body = '';
-    resendRes.on('data', chunk => { body += chunk; });
-    resendRes.on('end', () => {
-      res.writeHead(resendRes.statusCode, {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      });
-      res.end(body);
-    });
-  });
-
-  resendReq.on('error', (error) => {
-    res.writeHead(500);
-    res.end(JSON.stringify({ error: 'Failed to contact Resend API', details: error.message }));
-  });
-
-  resendReq.end();
+function sendText(res, status, text) {
+  res.writeHead(status, { 'Content-Type': 'text/plain; charset=utf-8' });
+  res.end(text);
 }
 
 server.listen(PORT, () => {
-  console.log(`✓ API proxy running on ${API_URL}`);
-  console.log(`  - POST /api/send (with Bearer token)`);
-  console.log(`  - GET /api/domains (with Bearer token)`);
+  console.log(`Resend Pad listening on port ${PORT}`);
 });

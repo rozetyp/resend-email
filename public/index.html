@@ -113,7 +113,7 @@
             />
             <p class="mt-1 text-xs text-gray-500">Stays in your browser. Never stored.</p>
             <div class="p-3 mt-3 text-xs text-blue-800 rounded-lg bg-blue-50" role="alert">
-              Tip: Need "Full Access" key to list domains. <a href="https://resend.com/api-keys" target="_blank" class="underline hover:no-underline">Get one →</a>
+              Tip: Load Domains and the Sent tab need a "Full access" key. A "Sending access" key can still send if you type the From address. <a href="https://resend.com/api-keys" target="_blank" class="underline hover:no-underline">Get one →</a>
             </div>
           </div>
 
@@ -342,7 +342,15 @@
     const API_URL = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
       ? 'http://localhost:3001'
       : `${window.location.protocol}//${window.location.host}`;
-    
+
+    // Escape anything that comes from the user or from Resend before it goes into innerHTML.
+    // The API key lives on this page, so an injected script could read it.
+    function escapeHtml(value) {
+      return String(value ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
         // ============ QUILL EDITOR ============
         var quill = new Quill('#quill-editor', {
@@ -436,7 +444,7 @@
               // Create domain selector
               let html = '<strong>Select a verified domain:</strong><div class="mt-2 flex flex-wrap gap-2">';
               domains.forEach(domain => {
-                html += `<button type="button" class="domain-btn text-xs font-medium px-2.5 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-domain="${domain.name}">${domain.name}</button>`;
+                html += `<button type="button" class="domain-btn text-xs font-medium px-2.5 py-1.5 rounded-md bg-white border border-gray-300 hover:bg-gray-100" data-domain="${escapeHtml(domain.name)}">${escapeHtml(domain.name)}</button>`;
               });
               html += '</div>';
               domainsList.innerHTML = html;
@@ -454,7 +462,7 @@
               });
             }
           } catch (error) {
-            domainsList.innerHTML = `<strong>❌ Failed to fetch domains:</strong><div class="mt-1 text-xs">${error.message}</div><div class="mt-2 text-xs text-gray-600">Still having issues? You can manually enter your From email (must be verified in Resend).</div>`;
+            domainsList.innerHTML = `<strong>❌ Failed to fetch domains:</strong><div class="mt-1 text-xs">${escapeHtml(error.message)}</div><div class="mt-2 text-xs text-gray-600">Still having issues? You can manually enter your From email (must be verified in Resend).</div>`;
             domainsList.classList.remove('hidden');
             console.error('Domain fetch error:', error);
           } finally {
@@ -561,6 +569,20 @@
             // 4. Focus back on headers input
             rawHeadersInput.focus();
         });
+
+        // Fully disconnect a thread and collapse the section (used by the main Reset button).
+        // Hidden inputs are not cleared by form.reset(), so this must run on every reset or the
+        // next email silently goes out as a reply to the old thread.
+        function clearThreadState() {
+            document.getElementById('in_reply_to').value = '';
+            document.getElementById('references').value = '';
+            rawHeadersInput.value = '';
+            threadSummaryCard.classList.add('hidden');
+            replyInputArea.classList.remove('hidden');
+            errorEl.classList.add('hidden');
+            document.getElementById('reply_section').classList.add('hidden');
+            document.getElementById('toggle_reply_text').textContent = 'Connect Thread';
+        }
 
         // Parse Resend JSON API response into a normalized headers object
         function parseResendJson(jsonStr) {
@@ -816,10 +838,19 @@
         const sendBtn = document.getElementById('send_btn');
         const resetBtn = document.getElementById('reset_btn');
 
-        // Reset button handler (clears Quill editor too)
+        // Reset button handler: clears the form, editor and thread, but keeps the API key
         resetBtn.addEventListener('click', function(e) {
           e.preventDefault();
+          const apiKeyEl = document.getElementById('api_key');
+          const savedKey = apiKeyEl.value;
           form.reset();
+          apiKeyEl.value = savedKey;
+          clearThreadState();
+          ['to_indicator', 'cc_indicator', 'bcc_indicator'].forEach(id => {
+            const el = document.getElementById(id);
+            el.textContent = id === 'to_indicator' ? 'Comma-separated for multiple recipients.' : '';
+            el.className = 'mt-1 text-xs text-gray-500';
+          });
           if (quill) {
             quill.setContents([]);
             // Immediately focus the editor and prevent button from staying focused
@@ -835,7 +866,6 @@
         if(form){
           form.addEventListener('submit', async function(e){
             e.preventDefault(); // Stop default form submission
-            console.log('Form submitted');
             
             // 0. Clear previous messages
             errorDiv.classList.add('hidden');
@@ -864,7 +894,7 @@
             const apiKey = document.getElementById('api_key').value;
             const fromName = document.getElementById('from_name').value.trim();
             const fromEmail = document.getElementById('from_email').value;
-            const from = fromName ? `"${fromName}" <${fromEmail}>` : fromEmail;
+            const from = fromName ? `"${fromName.replace(/["\\]/g, '')}" <${fromEmail}>` : fromEmail;
             const to = document.getElementById('to_email').value;
             const cc = document.getElementById('cc_email').value.trim();
             const bcc = document.getElementById('bcc_email').value.trim();
@@ -953,9 +983,9 @@
                 <div class="p-4 mb-4 text-sm text-green-800 rounded-lg bg-green-50" role="alert">
                   <span class="font-medium">✓ Email Sent Successfully!</span>
                   <div class="mt-2 p-3 bg-green-100 rounded font-mono text-xs">
-                    <div><strong>Email ID:</strong> ${data.id}</div>
-                    <div class="mt-1"><strong>To:</strong> ${to}</div>
-                    <div class="mt-1"><strong>From:</strong> ${from}</div>
+                    <div><strong>Email ID:</strong> ${escapeHtml(data.id)}</div>
+                    <div class="mt-1"><strong>To:</strong> ${escapeHtml(to)}</div>
+                    <div class="mt-1"><strong>From:</strong> ${escapeHtml(from)}</div>
                   </div>
                 </div>
               `;
@@ -975,7 +1005,7 @@
               messageContainer.innerHTML = `
                 <div class="p-4 mb-4 text-sm text-red-800 rounded-lg bg-red-50" role="alert">
                   <span class="font-medium">❌ Send Failed:</span>
-                  <div class="mt-1 text-xs">${errorMsg}</div>
+                  <div class="mt-1 text-xs">${escapeHtml(errorMsg)}</div>
                 </div>
               `;
             } finally {
@@ -1037,13 +1067,15 @@
             headers: { 'Authorization': `Bearer ${apiKey}` }
           });
           const e = await response.json();
+          if (!response.ok) throw new Error(e.message || e.error || `Error ${response.status}`);
 
           document.getElementById('modal_subject').textContent = e.subject || '(no subject)';
           document.getElementById('modal_to').textContent = `To: ${Array.isArray(e.to) ? e.to.join(', ') : e.to}  ·  From: ${e.from}`;
           document.getElementById('modal_date').textContent = new Date(e.created_at).toLocaleString();
-          modalBody.srcdoc = e.html || `<pre style="font-family:sans-serif;padding:16px;white-space:pre-wrap">${e.text || '(no content)'}</pre>`;
+          modalBody.srcdoc = e.html || `<pre style="font-family:sans-serif;padding:16px;white-space:pre-wrap">${escapeHtml(e.text || '(no content)')}</pre>`;
         } catch (err) {
-          modalBody.srcdoc = `<p style="padding:16px;color:red">${err.message}</p>`;
+          document.getElementById('modal_subject').textContent = 'Could not load email';
+          modalBody.srcdoc = `<p style="padding:16px;color:red;font-family:sans-serif">${escapeHtml(err.message)}</p>`;
         }
       }
 
@@ -1083,15 +1115,15 @@
           sentList.innerHTML = `
             <div class="divide-y divide-gray-100">
               ${emails.map(e => `
-                <div class="py-3 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2 transition-colors" data-id="${e.id}">
+                <div class="py-3 cursor-pointer hover:bg-gray-50 rounded px-2 -mx-2 transition-colors" data-id="${escapeHtml(e.id)}">
                   <div class="flex justify-between items-start gap-2">
                     <div class="min-w-0">
-                      <p class="text-sm font-medium text-gray-900 truncate">${e.subject || '(no subject)'}</p>
-                      <p class="text-xs text-gray-500 truncate">To: ${Array.isArray(e.to) ? e.to.join(', ') : e.to}</p>
+                      <p class="text-sm font-medium text-gray-900 truncate">${escapeHtml(e.subject || '(no subject)')}</p>
+                      <p class="text-xs text-gray-500 truncate">To: ${escapeHtml(Array.isArray(e.to) ? e.to.join(', ') : e.to)}</p>
                     </div>
                     <div class="flex-shrink-0 text-right">
-                      <p class="text-xs ${statusColor(e.last_event)}">${e.last_event || 'sent'}</p>
-                      <p class="text-xs text-gray-400">${new Date(e.created_at).toLocaleDateString()}</p>
+                      <p class="text-xs ${statusColor(e.last_event)}">${escapeHtml(e.last_event || 'sent')}</p>
+                      <p class="text-xs text-gray-400">${escapeHtml(new Date(e.created_at).toLocaleDateString())}</p>
                     </div>
                   </div>
                 </div>
@@ -1104,7 +1136,7 @@
             row.addEventListener('click', () => openEmailDetail(row.dataset.id));
           });
         } catch (err) {
-          sentList.innerHTML = `<p class="text-sm text-red-500 text-center py-8">${err.message}</p>`;
+          sentList.innerHTML = `<p class="text-sm text-red-500 text-center py-8">${escapeHtml(err.message)}</p>`;
         }
       }
 
@@ -1124,3 +1156,5 @@
       · 
       <a href="https://github.com/rozetyp/resend-email" target="_blank" rel="noopener noreferrer" class="text-blue-600 hover:underline">GitHub</a>
     </div>
+</body>
+</html>
